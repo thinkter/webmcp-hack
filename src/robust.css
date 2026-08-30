@@ -1,0 +1,5 @@
+.inspector-description { margin: -5px 0 16px; color: #7b867f; font-size: 12px; }
+.inspector-actions { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 16px; }
+.inspector-actions button { display: flex; align-items: center; gap: 6px; padding: 8px 9px; border: 1px solid #303834; border-radius: 3px; color: #9aa49e; background: #131715; font: 8px monospace; text-transform: uppercase; cursor: pointer; }
+.inspector-actions button:hover { border-color: #b9ff66; color: #dfe7e1; }
+.inspector-actions .danger-button { margin: 0; border-color: #4a2b29; color: #d78177; background: #211313; }

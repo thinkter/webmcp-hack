@@ -8,6 +8,10 @@ function makeNode(operatorId:string,position:XYPosition,id=`${operatorId}-${cryp
   const kind:NodeKind=definition.category==='output'?'output':definition.category==='source'||definition.category==='generator'?'source':'effect'
   return{id,type:'graphNode',position,data:{label:definition.label,kind,operatorId,family:definition.family,category:definition.category,...definition.defaults}}
 }
+function freePosition(nodes:VisualNode[]):XYPosition{
+  for(let row=0;row<20;row++)for(let column=0;column<5;column++){const candidate={x:40+column*270,y:80+row*170};if(nodes.every(node=>Math.abs(node.position.x-candidate.x)>225||Math.abs(node.position.y-candidate.y)>135))return candidate}
+  return{x:40,y:80+nodes.length*170}
+}
 const initialNodes:VisualNode[]=[
   makeNode('noise',{x:40,y:180},'source-1'),makeNode('glitch',{x:330,y:180},'effect-1'),makeNode('preview',{x:620,y:180},'output-1'),makeNode('lfo',{x:330,y:390},'control-1'),
 ]
@@ -32,7 +36,7 @@ export const useGraphStore=create<GraphState>((set,get)=>({
   isValidConnection:(connection)=>{const s=get();if(connection.source===connection.target)return false;const source=s.nodes.find(n=>n.id===connection.source),target=s.nodes.find(n=>n.id===connection.target);return portType(source,connection.sourceHandle,'output')===portType(target,connection.targetHandle,'input')&&!s.edges.some(e=>e.target===connection.target&&e.targetHandle===connection.targetHandle)},
   onConnect:(connection)=>{if(!get().isValidConnection(connection))return;const source=get().nodes.find(n=>n.id===connection.source);set((s)=>({edges:addEdge({...connection,animated:true,data:{portType:portType(source,connection.sourceHandle,'output')}},s.edges)}))},
   selectNode:(selectedNodeId)=>set({selectedNodeId}),setLibraryOpen:(libraryOpen)=>set({libraryOpen}),
-  addOperator:(operatorId,position)=>{const id=`${operatorId}-${crypto.randomUUID()}`,count=get().nodes.length,node=makeNode(operatorId,position??{x:100+(count%3)*250,y:100+Math.floor(count/3)*145},id);set((s)=>({nodes:[...s.nodes,node],selectedNodeId:id,libraryOpen:false}));return id},
+  addOperator:(operatorId,position)=>{const id=`${operatorId}-${crypto.randomUUID()}`,node=makeNode(operatorId,position??freePosition(get().nodes),id);set((s)=>({nodes:[...s.nodes,node],selectedNodeId:id,libraryOpen:false}));return id},
   duplicateNode:(id)=>{const original=get().nodes.find(n=>n.id===id);if(!original)return;const copy={...makeNode(String(original.data.operatorId),{x:original.position.x+36,y:original.position.y+36}),data:{...original.data,label:`${original.data.label} Copy`}};set(s=>({nodes:[...s.nodes,copy],selectedNodeId:copy.id}))},
   deleteNode:(id)=>set((s)=>({nodes:s.nodes.filter(n=>n.id!==id),edges:s.edges.filter(e=>e.source!==id&&e.target!==id),selectedNodeId:s.selectedNodeId===id?null:s.selectedNodeId})),
   setNodeParameter:(id,parameter,value)=>set((s)=>({nodes:s.nodes.map(n=>n.id===id?{...n,data:{...n.data,[parameter]:value}}:n)})),
