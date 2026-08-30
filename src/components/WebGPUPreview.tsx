@@ -22,7 +22,10 @@ export function WebGPUPreview() {
       const context: GPUCanvasContext = candidate
       const format = navigator.gpu.getPreferredCanvasFormat(); context.configure({ device, format, alphaMode: 'opaque' })
       const module = device.createShaderModule({ code: shader })
-      const pipeline = device.createRenderPipeline({ layout: 'auto', vertex: { module, entryPoint: 'vertexMain' }, fragment: { module, entryPoint: 'fragmentMain', targets: [{ format }] } })
+      const compilation = await module.getCompilationInfo()
+      const shaderErrors = compilation.messages.filter((message) => message.type === 'error')
+      if (shaderErrors.length) throw new Error(`WGSL compilation failed: ${shaderErrors.map((message) => message.message).join('; ')}`)
+      const pipeline = await device.createRenderPipelineAsync({ layout: 'auto', vertex: { module, entryPoint: 'vertexMain' }, fragment: { module, entryPoint: 'fragmentMain', targets: [{ format }] } })
       const buffer = device.createBuffer({ size: 32, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
       const group = device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer } }] })
       const started = performance.now()

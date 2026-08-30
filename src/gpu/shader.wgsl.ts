@@ -1,5 +1,13 @@
 export const shader = /* wgsl */ `
-struct Uniforms { resolution: vec2f, time: f32, intensity: f32, effect: f32, _padding: vec3f }
+struct Uniforms {
+  resolution: vec2f,
+  time: f32,
+  intensity: f32,
+  effect: f32,
+  _padding0: f32,
+  _padding1: f32,
+  _padding2: f32,
+}
 @group(0) @binding(0) var<uniform> u: Uniforms;
 struct Out { @builtin(position) position: vec4f, @location(0) uv: vec2f }
 @vertex fn vertexMain(@builtin(vertex_index) i: u32) -> Out {
