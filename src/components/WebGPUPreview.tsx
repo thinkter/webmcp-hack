@@ -6,7 +6,7 @@ const ids: Record<EffectKind, number> = { none: 0, vhs: 1, pixelate: 2, kaleidos
 
 export function WebGPUPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const effectNode = useGraphStore((s) => s.nodes.find((n) => n.data.kind === 'effect' && n.data.enabled))
+  const effectNode = useGraphStore((s) => s.nodes.find((n) => n.data.family === 'TOP' && n.data.category === 'effect' && n.data.enabled && !n.data.bypass))
   const effectRef = useRef(effectNode); effectRef.current = effectNode
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
@@ -33,8 +33,12 @@ export function WebGPUPreview() {
         if (stopped) return
         const ratio = Math.min(devicePixelRatio, 2), width = Math.max(1, Math.floor(targetCanvas.clientWidth * ratio)), height = Math.max(1, Math.floor(targetCanvas.clientHeight * ratio))
         if (targetCanvas.width !== width || targetCanvas.height !== height) { targetCanvas.width = width; targetCanvas.height = height }
-        const node = effectRef.current, effect = (node?.data.effect as EffectKind | undefined) ?? 'none'
-        device.queue.writeBuffer(buffer, 0, new Float32Array([width, height, (performance.now()-started)/1000, node?.data.intensity ?? 0, ids[effect], 0, 0, 0]))
+        const node = effectRef.current, effect = (node?.data.effect as EffectKind | undefined) ?? 'none', time=(performance.now()-started)/1000
+        const state=useGraphStore.getState(), modulationEdge=state.edges.find(edge=>edge.target===node?.id&&edge.targetHandle==='param:intensity')
+        const controller=state.nodes.find(candidate=>candidate.id===modulationEdge?.source)
+        const controlValue=controller?.data.operatorId==='lfo'?(Math.sin(time*Number(controller.data.speed??1)*Math.PI*2)*.5+.5)*Number(controller.data.amplitude??1):Number(controller?.data.value??0)
+        const intensity=modulationEdge?Math.min(1,Math.max(0,controlValue)):Number(node?.data.intensity??0)
+        device.queue.writeBuffer(buffer, 0, new Float32Array([width, height, time, intensity, ids[effect], 0, 0, 0]))
         const encoder=device.createCommandEncoder(), pass=encoder.beginRenderPass({ colorAttachments:[{ view:context.getCurrentTexture().createView(), clearValue:{r:.01,g:.02,b:.02,a:1}, loadOp:'clear', storeOp:'store' }] })
         pass.setPipeline(pipeline); pass.setBindGroup(0,group); pass.draw(3); pass.end(); device.queue.submit([encoder.finish()]); frame=requestAnimationFrame(render)
       }

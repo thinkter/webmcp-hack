@@ -1,14 +1,16 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { CircleDot, MonitorUp, SlidersHorizontal, Waves } from 'lucide-react'
+import { Copy, Eye, EyeOff, MoreHorizontal, Trash2 } from 'lucide-react'
+import { getOperatorDefinition, useGraphStore } from '../graph/store'
 import type { VisualNode } from '../graph/types'
-const icons = { source: Waves, effect: SlidersHorizontal, output: MonitorUp }
-export function GraphNode({ data, selected }: NodeProps<VisualNode>) {
-  const Icon = icons[data.kind]
-  return <article className={`graph-node ${selected ? 'selected' : ''}`}>
-    {data.kind !== 'source' && <Handle type="target" position={Position.Left} />}
-    <div className="node-topline"><Icon size={15} /><span>{data.kind}</span><CircleDot size={10} /></div>
-    <strong>{data.label}</strong>
-    <div className="node-meta"><span>{data.effect ?? (data.kind === 'source' ? 'procedural' : 'display')}</span><b>{data.intensity == null ? 'LIVE' : `${Math.round(data.intensity * 100)}%`}</b></div>
-    {data.kind !== 'output' && <Handle type="source" position={Position.Right} />}
+export function GraphNode({id,data,selected}:NodeProps<VisualNode>){
+  const definition=getOperatorDefinition({id,data} as VisualNode);const {deleteNode,duplicateNode,toggleBypass}=useGraphStore()
+  return <article className={`graph-node family-${data.family?.toLowerCase()} ${selected?'selected':''} ${data.bypass?'bypassed':''}`}>
+    {definition?.inputs.map((port,index)=><Handle key={port.id} id={port.id} type="target" position={Position.Left} style={{top:55+index*22}} className={`port-${port.type}`}/>) }
+    <div className="node-topline"><i>{data.family}</i><span>{definition?.category}</span><button className="node-menu"><MoreHorizontal size={13}/></button></div>
+    <strong>{data.label}</strong><p>{definition?.description}</p>
+    <div className="ports-list">{definition?.inputs.map(port=><span key={port.id}><i className={`dot ${port.type}`}/>{port.label}</span>)}</div>
+    {data.family==='TOP'&&data.category==='effect'&&<div className="parameter-port"><Handle id="param:intensity" type="target" position={Position.Left} className="port-number"/><span><i className="dot number"/>Intensity</span><b>{Math.round((data.intensity??0)*100)}%</b></div>}
+    <div className="node-footer"><span>{data.enabled?'COOKING':'OFF'}</span><div><button title="Bypass" onClick={()=>toggleBypass(id)}>{data.bypass?<EyeOff size={12}/>:<Eye size={12}/>}</button><button title="Duplicate" onClick={()=>duplicateNode(id)}><Copy size={12}/></button><button title="Delete" onClick={()=>deleteNode(id)}><Trash2 size={12}/></button></div></div>
+    {definition?.outputs.map((port,index)=><Handle key={port.id} id={port.id} type="source" position={Position.Right} style={{top:55+index*22}} className={`port-${port.type}`}/>) }
   </article>
 }
