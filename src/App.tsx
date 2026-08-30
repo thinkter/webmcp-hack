@@ -1,15 +1,19 @@
 import { Background, Controls, MiniMap, ReactFlow, ReactFlowProvider } from '@xyflow/react'
+import { useEffect, useState } from 'react'
 import { Cpu, Plus, Radio, Sparkles } from 'lucide-react'
 import { GraphNode } from './components/GraphNode'
 import { Inspector } from './components/Inspector'
 import { WebGPUPreview } from './components/WebGPUPreview'
 import { useGraphStore } from './graph/store'
+import { registerWebMCP } from './webmcp/register'
 const nodeTypes = { graphNode: GraphNode }
 
 function Workspace() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, selectNode, addEffect } = useGraphStore()
+  const [webMcpSupported, setWebMcpSupported] = useState(false)
+  useEffect(() => { const registration = registerWebMCP(); setWebMcpSupported(registration.supported); return registration.dispose }, [])
   return <main className="app-shell">
-    <header className="topbar"><div className="brand"><span className="mark"><Sparkles size={15}/></span><div><span className="eyebrow">WEBMCP × WEBGPU</span><h1>Visual Graph Lab <em>alpha</em></h1></div></div><div className="status"><span><i/>GPU pipeline live</span><span><Radio size={13}/>local graph</span></div></header>
+    <header className="topbar"><div className="brand"><span className="mark"><Sparkles size={15}/></span><div><span className="eyebrow">WEBMCP × WEBGPU</span><h1>Visual Graph Lab <em>alpha</em></h1></div></div><div className="status"><span><i/>GPU pipeline live</span><span><Radio size={13}/>{webMcpSupported?'7 tools exposed':'WebMCP unavailable'}</span></div></header>
     <section className="workspace">
       <aside className="rail"><button className="active"><Cpu size={18}/></button><button onClick={addEffect}><Plus size={18}/></button><span/></aside>
       <section className="graph-panel"><PanelHeading label="PATCH" title="MAIN COMPOSITION"><button onClick={addEffect}><Plus size={14}/>Add effect</button></PanelHeading>
