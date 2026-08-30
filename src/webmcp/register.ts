@@ -1,12 +1,13 @@
 import { useGraphStore } from '../graph/store'
 import { operators } from '../graph/operators'
+import { buildExecutionPlan } from '../graph/execution'
 
 type Tool = { name:string; description:string; inputSchema?:Record<string,unknown>; annotations?:{readOnlyHint?:boolean}; execute:(input:Record<string,unknown>)=>unknown|Promise<unknown> }
 type ModelContext = { registerTool:(tool:Tool,options?:{signal?:AbortSignal})=>Promise<void> }
 declare global { interface Document { modelContext?: ModelContext } }
 const schema=(properties:Record<string,unknown>,required:string[]=[])=>({type:'object',properties,required,additionalProperties:false})
 const text=(value:unknown)=>({content:[{type:'text',text:JSON.stringify(value,null,2)}]})
-const snapshot=()=>{const {nodes,edges}=useGraphStore.getState();return{nodes:nodes.map(({id,position,data})=>({id,position,...data})),connections:edges.map(({id,source,target})=>({id,source,target}))}}
+const snapshot=()=>{const {nodes,edges}=useGraphStore.getState();return{execution:buildExecutionPlan(nodes,edges),nodes:nodes.map(({id,position,data})=>({id,position,...data})),connections:edges.map(({id,source,target})=>({id,source,target}))}}
 function createNode(input:Record<string,unknown>){
   const legacy:Record<string,string>={source:'camera',effect:'glitch',output:'preview'},operatorId=String(input.operator_id||legacy[String(input.kind)]||'')
   if(!operators.some(operator=>operator.id===operatorId))throw new Error(`Unknown operator_id: ${operatorId}`)

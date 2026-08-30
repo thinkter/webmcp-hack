@@ -12,6 +12,8 @@ export function Inspector() {
   return <div className="inspector">
     <div className="inspector-title"><span>INSPECTOR · {node.data.family}</span><strong>{node.data.label}</strong></div>
     <p className="inspector-description">{definition?.description}</p>
+    {definition?.runtime==='planned'&&<p className="runtime-notice">PLANNED OPERATOR · Available for patch design, but it cannot produce runtime data yet.</p>}
+    {!node.data.enabled&&<p className="runtime-notice disabled">DISABLED · This node blocks its connected output path.</p>}
     <label><span>Name</span><input value={node.data.label} onChange={(e) => setNodeParameter(node.id, 'label', e.target.value)} /></label>
     {node.data.family === 'TOP' && node.data.category === 'effect' && <>
       <label><span>Shader</span><select value={node.data.effect} onChange={(e) => setEffect(node.id, e.target.value as EffectKind)}>{effects.map((effect) => <option key={effect}>{effect}</option>)}</select></label>

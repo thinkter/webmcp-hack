@@ -19,7 +19,7 @@ WebGPU requires a compatible browser. WebMCP currently requires ChatGPT's in-app
 - Real WebGPU render pipeline with WGSL fragment effects
 - VHS, chromatic aberration, pixelation, and kaleidoscope modes
 - Live node inspector driving GPU uniforms
-- Seven imperative WebMCP tools registered through `document.modelContext`
+- Eight imperative WebMCP tools registered through `document.modelContext`
 
 ### WebMCP tools
 
@@ -29,7 +29,9 @@ WebGPU requires a compatible browser. WebMCP currently requires ChatGPT's in-app
 
 The editor distinguishes texture-carrying TOP ports from numeric CHOP ports. Its operator browser currently includes 38 nodes across sources, generators, effects, composites, controls, audio, and outputs. Invalid type connections, occupied inputs, and self-connections are rejected.
 
-Implemented runtime paths currently include the procedural Noise TOP, ordered chains of up to four VHS, chromatic aberration, pixelate, and kaleidoscope GPU effects, Preview output, and LFO/constant modulation of effect intensity. The remaining catalog entries establish the graph and UI contracts but still need their corresponding media or GPU runtime implementations.
+Implemented runtime paths currently include procedural Noise, Solid Color, and Gradient TOPs; ordered chains of up to four VHS, chromatic aberration, pixelate, and kaleidoscope GPU effects; Preview output; and LFO/constant modulation of effect intensity. The output monitor executes only the enabled texture path wired into Preview. Missing inputs, disabled nodes, cycles, and unsupported operators produce an explicit no-signal state instead of stale or unrelated imagery.
+
+The remaining catalog entries establish future graph and UI contracts but do not pretend to execute: they are marked `PLANNED` in the operator browser, on the canvas, and in the inspector. WebMCP graph inspection reports the same execution status used by the monitor.
 
 Canvas shortcuts:
 

@@ -1,13 +1,16 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { buildExecutionPlan } from '../graph/execution'
 import { useGraphStore } from '../graph/store'
 import type { EffectKind } from '../graph/types'
 import { shader } from '../gpu/shader.wgsl'
 const ids: Record<EffectKind, number> = { none: 0, vhs: 1, pixelate: 2, kaleidoscope: 3, chromatic: 4 }
+const sourceIds:Record<string,number>={noise:1,color:2,gradient:3}
 
 export function WebGPUPreview() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const effectNode = useGraphStore((s) => s.nodes.find((n) => n.data.family === 'TOP' && n.data.category === 'effect' && n.data.enabled && !n.data.bypass))
-  const effectRef = useRef(effectNode); effectRef.current = effectNode
+  const nodes=useGraphStore(state=>state.nodes),edges=useGraphStore(state=>state.edges)
+  const plan=useMemo(()=>buildExecutionPlan(nodes,edges),[nodes,edges])
+  const planRef=useRef(plan);planRef.current=plan
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return
@@ -26,7 +29,7 @@ export function WebGPUPreview() {
       const shaderErrors = compilation.messages.filter((message) => message.type === 'error')
       if (shaderErrors.length) throw new Error(`WGSL compilation failed: ${shaderErrors.map((message) => message.message).join('; ')}`)
       const pipeline = await device.createRenderPipelineAsync({ layout: 'auto', vertex: { module, entryPoint: 'vertexMain' }, fragment: { module, entryPoint: 'fragmentMain', targets: [{ format }] } })
-      const buffer = device.createBuffer({ size: 48, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
+      const buffer = device.createBuffer({ size: 64, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
       const group = device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer } }] })
       let timeline=0,lastTick=performance.now(),lastDraw=0
       function render(now=performance.now()) {
@@ -38,12 +41,12 @@ export function WebGPUPreview() {
         lastDraw=now
         const ratio = Math.min(devicePixelRatio, 2), width = Math.max(1, Math.floor(targetCanvas.clientWidth * ratio)), height = Math.max(1, Math.floor(targetCanvas.clientHeight * ratio))
         if (targetCanvas.width !== width || targetCanvas.height !== height) { targetCanvas.width = width; targetCanvas.height = height }
-        const time=timeline,state=runtime,output=state.nodes.find(node=>node.data.category==='output')
-        const stages=[];let cursor=output?.id;const visited=new Set<string>()
-        while(cursor&&!visited.has(cursor)&&stages.length<4){visited.add(cursor);const edge=state.edges.find(candidate=>candidate.target===cursor&&candidate.data?.portType==='texture');if(!edge)break;const source=state.nodes.find(node=>node.id===edge.source);if(!source)break;if(source.data.category==='effect'&&source.data.enabled&&!source.data.bypass)stages.unshift(source);cursor=source.id}
+        const time=timeline,state=runtime,currentPlan=planRef.current
+        const stages=currentPlan.status==='ready'?currentPlan.stages.slice(0,4):[]
         const effectValues=[0,0,0,0],amountValues=[0,0,0,0]
         stages.forEach((node,index)=>{effectValues[index]=ids[(node.data.effect as EffectKind|undefined)??'none'];const edge=state.edges.find(candidate=>candidate.target===node.id&&candidate.targetHandle==='param:intensity'),controller=state.nodes.find(candidate=>candidate.id===edge?.source);const value=controller?.data.operatorId==='lfo'?(Math.sin(time*Number(controller.data.speed??1)*Math.PI*2)*.5+.5)*Number(controller.data.amplitude??1):Number(controller?.data.value??node.data.intensity??0);amountValues[index]=Math.min(1,Math.max(0,value))})
-        device.queue.writeBuffer(buffer, 0, new Float32Array([width,height,time,stages.length,...effectValues,...amountValues]))
+        const sourceId=currentPlan.status==='ready'?sourceIds[String(currentPlan.source?.data.operatorId)]??0:0
+        device.queue.writeBuffer(buffer, 0, new Float32Array([width,height,time,stages.length,...effectValues,...amountValues,sourceId,0,0,0]))
         const encoder=device.createCommandEncoder(), pass=encoder.beginRenderPass({ colorAttachments:[{ view:context.getCurrentTexture().createView(), clearValue:{r:.01,g:.02,b:.02,a:1}, loadOp:'clear', storeOp:'store' }] })
         pass.setPipeline(pipeline); pass.setBindGroup(0,group); pass.draw(3); pass.end(); device.queue.submit([encoder.finish()])
       }
@@ -52,5 +55,5 @@ export function WebGPUPreview() {
     start().catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'WebGPU initialization failed.'))
     return () => { stopped=true; cancelAnimationFrame(frame) }
   }, [])
-  return <div className="preview-wrap"><canvas ref={canvasRef} aria-label="Live WebGPU output" /><div className="preview-overlay"><span>WEBGPU</span><b>{effectNode?.data.effect ?? 'bypass'}</b></div>{error && <div className="gpu-error"><strong>GPU OFFLINE</strong><span>{error}</span></div>}</div>
+  return <div className="preview-wrap"><canvas ref={canvasRef} aria-label="Live WebGPU output" /><div className="preview-overlay"><span>WEBGPU</span><b>{plan.status==='ready'?`${plan.source?.data.label}${plan.stages.length?` + ${plan.stages.length} FX`:''}`:plan.status.toUpperCase()}</b></div>{plan.status!=='ready'&&!error&&<div className="no-signal"><strong>NO SIGNAL</strong><span>{plan.message}</span></div>}{error && <div className="gpu-error"><strong>GPU OFFLINE</strong><span>{error}</span></div>}</div>
 }

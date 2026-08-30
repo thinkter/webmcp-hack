@@ -5,6 +5,7 @@ struct Uniforms {
   stageCount: f32,
   effects: vec4f,
   amounts: vec4f,
+  source: vec4f,
 }
 @group(0) @binding(0) var<uniform> u: Uniforms;
 struct Out { @builtin(position) position: vec4f, @location(0) uv: vec2f }
@@ -12,7 +13,10 @@ struct Out { @builtin(position) position: vec4f, @location(0) uv: vec2f }
   var p = array<vec2f, 3>(vec2f(-1.,-1.), vec2f(3.,-1.), vec2f(-1.,3.));
   var o: Out; o.position = vec4f(p[i],0.,1.); o.uv = o.position.xy * vec2f(.5,-.5) + .5; return o;
 }
-fn signal(uv: vec2f) -> vec3f {
+fn sourceSignal(uv: vec2f) -> vec3f {
+  if u.source.x < .5 { return vec3f(0.); }
+  if u.source.x > 1.5 && u.source.x < 2.5 { return vec3f(.08,.34,.28); }
+  if u.source.x > 2.5 { return vec3f(uv.x*.08,uv.y*.7+.08,(1.-uv.x)*.45+.12); }
   let p = (uv-.5)*vec2f(u.resolution.x/u.resolution.y,1.);
   let r = length(p); let a = atan2(p.y,p.x);
   let bands = sin(r*24.-u.time*2.4+sin(a*5.+u.time));
@@ -27,9 +31,9 @@ fn signal(uv: vec2f) -> vec3f {
     if kind==2 { let size=mix(180.,20.,amount); uv=floor(uv*size)/size; }
     if kind==3 { let p=uv-.5; let a=abs(fract(atan2(p.y,p.x)/1.0472)-.5)*2.0944; uv=vec2f(cos(a),sin(a))*length(p)+.5; }
   }
-  var color=signal(uv);
+  var color=sourceSignal(uv);
   for(var stage=0;stage<4;stage++) { if(f32(stage)>=u.stageCount){break;} let kind=i32(u.effects[stage]); let amount=u.amounts[stage];
-    if kind==4 { let d=.012*amount; color=vec3f(signal(uv+vec2f(d,0.)).r,color.g,signal(uv-vec2f(d,0.)).b); }
+    if kind==4 { let d=.012*amount; color=vec3f(sourceSignal(uv+vec2f(d,0.)).r,color.g,sourceSignal(uv-vec2f(d,0.)).b); }
     if kind==1 { color*=.78+.22*sin(uv.y*u.resolution.y*1.5); color+=vec3f(.08,.01,.06)*sin(uv.y*280.+u.time*5.)*amount; }
   }
   return vec4f(pow(max(color,vec3f(0.)),vec3f(.86)),1.);

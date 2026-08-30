@@ -25,3 +25,12 @@
 .link-route strong { display: block; overflow: hidden; margin: 6px 0; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
 .link-route > b { color: #ffcf5c; text-align: center; }
 .link-inspector > p { color: #7b867f; font-size: 11px; }
+.runtime-planned { border-style: dashed; opacity: .78; }
+.runtime-planned .node-footer > span { color: #d8a44a; }
+.library-category button.planned { opacity: .72; }
+.library-category button.planned em { width: auto; color: #d8a44a; font-size: 7px; }
+.runtime-notice { margin: 0 0 14px; padding: 9px; border: 1px solid #5a4625; border-radius: 3px; color: #e2b760; background: #201a10; font: 8px/1.5 monospace; }
+.runtime-notice.disabled { border-color: #59302d; color: #dc8379; background: #211312; }
+.no-signal { position: absolute; inset: 0; display: grid; place-content: center; gap: 8px; padding: 28px; color: #707a74; background: #000; text-align: center; }
+.no-signal strong { color: #a5aea8; font: 15px monospace; letter-spacing: .18em; }
+.no-signal span { max-width: 360px; font: 10px/1.5 monospace; }
