@@ -37,6 +37,16 @@ Canvas shortcuts:
 - `Delete` / `Backspace`: delete the selected node
 - `Ctrl/Cmd + D`: duplicate the selected node
 - `Shift`: multi-select
+- Select a wire, then `Delete` / `Backspace`: remove only that connection
+- `Ctrl/Cmd + A`: select all nodes
+- `Ctrl/Cmd + C` / `Ctrl/Cmd + V`: copy and paste selected nodes
+- `Ctrl/Cmd + Z` / `Ctrl/Cmd + Shift + Z`: undo and redo
+
+Graphs autosave in the browser and can be exported/imported as versioned JSON documents from the workspace toolbar.
+
+## Open-source interaction references
+
+The workspace behavior takes inspiration from [LiteGraph.js](https://github.com/jagenjo/litegraph.js) for typed slots, serialization, search, shortcuts, subgraph-oriented workflows, and large-graph editing; [cables](https://github.com/cables-gl/cables) for browser-native realtime visual programming; and [Node-RED](https://github.com/node-red/node-red) for flow import/export and operational editor conventions. The renderer remains based on [React Flow](https://github.com/xyflow/xyflow), while the execution engine and WebGPU/WebMCP integration are project-specific.
 
 The implementation feature-detects WebMCP, so the editor and WebGPU renderer still work in browsers that do not expose `document.modelContext`.
 

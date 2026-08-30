@@ -3,3 +3,25 @@
 .inspector-actions button { display: flex; align-items: center; gap: 6px; padding: 8px 9px; border: 1px solid #303834; border-radius: 3px; color: #9aa49e; background: #131715; font: 8px monospace; text-transform: uppercase; cursor: pointer; }
 .inspector-actions button:hover { border-color: #b9ff66; color: #dfe7e1; }
 .inspector-actions .danger-button { margin: 0; border-color: #4a2b29; color: #d78177; background: #211313; }
+.app-shell { grid-template-rows: 72px 40px 1fr; }
+.workspace-toolbar { display: flex; align-items: center; gap: 8px; padding: 0 12px 0 60px; border-bottom: 1px solid #222725; background: #0a0d0c; }
+.toolbar-group { display: flex; border: 1px solid #29312d; border-radius: 3px; overflow: hidden; }
+.toolbar-group button, .transport button { display: grid; place-items: center; width: 30px; height: 27px; border: 0; border-right: 1px solid #29312d; color: #89948d; background: #121614; cursor: pointer; }
+.toolbar-group button:last-child { border-right: 0; }
+.toolbar-group button:hover:not(:disabled), .transport button:hover { color: #b9ff66; background: #1a211d; }
+.toolbar-group button:disabled { opacity: .3; cursor: default; }
+.transport { display: flex; align-items: center; gap: 7px; margin-left: 7px; color: #7f8983; font: 8px monospace; }
+.transport button { border: 1px solid #2c3530; border-radius: 3px; }
+.transport button.playing { color: #0a100b; background: #b9ff66; }
+.transport select { border: 1px solid #2c3530; border-radius: 3px; padding: 4px; color: #aab3ad; background: #101412; font: 9px monospace; }
+.transport small { color: #59625d; font: 8px monospace; }
+.toolbar-spacer { flex: 1; }
+.graph-stats { color: #626c66; font: 8px monospace; letter-spacing: .08em; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: #ffcf5c; stroke-width: 3; filter: drop-shadow(0 0 4px #ffcf5c88); }
+.react-flow__edge { cursor: pointer; }
+.link-route { display: grid; grid-template-columns: 1fr 24px 1fr; align-items: center; gap: 8px; margin: 18px 0; }
+.link-route > div { padding: 11px; border: 1px solid #2d3531; border-radius: 3px; background: #111513; }
+.link-route span, .link-route small { display: block; color: #69736d; font: 8px monospace; }
+.link-route strong { display: block; overflow: hidden; margin: 6px 0; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+.link-route > b { color: #ffcf5c; text-align: center; }
+.link-inspector > p { color: #7b867f; font-size: 11px; }

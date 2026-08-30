@@ -28,19 +28,24 @@ export function WebGPUPreview() {
       const pipeline = await device.createRenderPipelineAsync({ layout: 'auto', vertex: { module, entryPoint: 'vertexMain' }, fragment: { module, entryPoint: 'fragmentMain', targets: [{ format }] } })
       const buffer = device.createBuffer({ size: 48, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST })
       const group = device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer } }] })
-      const started = performance.now()
-      function render() {
+      let timeline=0,lastTick=performance.now(),lastDraw=0
+      function render(now=performance.now()) {
         if (stopped) return
+        frame=requestAnimationFrame(render)
+        const runtime=useGraphStore.getState(),delta=(now-lastTick)/1000;lastTick=now
+        if(runtime.playing)timeline+=delta
+        if(now-lastDraw<1000/runtime.fps)return
+        lastDraw=now
         const ratio = Math.min(devicePixelRatio, 2), width = Math.max(1, Math.floor(targetCanvas.clientWidth * ratio)), height = Math.max(1, Math.floor(targetCanvas.clientHeight * ratio))
         if (targetCanvas.width !== width || targetCanvas.height !== height) { targetCanvas.width = width; targetCanvas.height = height }
-        const time=(performance.now()-started)/1000,state=useGraphStore.getState(),output=state.nodes.find(node=>node.data.category==='output')
+        const time=timeline,state=runtime,output=state.nodes.find(node=>node.data.category==='output')
         const stages=[];let cursor=output?.id;const visited=new Set<string>()
         while(cursor&&!visited.has(cursor)&&stages.length<4){visited.add(cursor);const edge=state.edges.find(candidate=>candidate.target===cursor&&candidate.data?.portType==='texture');if(!edge)break;const source=state.nodes.find(node=>node.id===edge.source);if(!source)break;if(source.data.category==='effect'&&source.data.enabled&&!source.data.bypass)stages.unshift(source);cursor=source.id}
         const effectValues=[0,0,0,0],amountValues=[0,0,0,0]
         stages.forEach((node,index)=>{effectValues[index]=ids[(node.data.effect as EffectKind|undefined)??'none'];const edge=state.edges.find(candidate=>candidate.target===node.id&&candidate.targetHandle==='param:intensity'),controller=state.nodes.find(candidate=>candidate.id===edge?.source);const value=controller?.data.operatorId==='lfo'?(Math.sin(time*Number(controller.data.speed??1)*Math.PI*2)*.5+.5)*Number(controller.data.amplitude??1):Number(controller?.data.value??node.data.intensity??0);amountValues[index]=Math.min(1,Math.max(0,value))})
         device.queue.writeBuffer(buffer, 0, new Float32Array([width,height,time,stages.length,...effectValues,...amountValues]))
         const encoder=device.createCommandEncoder(), pass=encoder.beginRenderPass({ colorAttachments:[{ view:context.getCurrentTexture().createView(), clearValue:{r:.01,g:.02,b:.02,a:1}, loadOp:'clear', storeOp:'store' }] })
-        pass.setPipeline(pipeline); pass.setBindGroup(0,group); pass.draw(3); pass.end(); device.queue.submit([encoder.finish()]); frame=requestAnimationFrame(render)
+        pass.setPipeline(pipeline); pass.setBindGroup(0,group); pass.draw(3); pass.end(); device.queue.submit([encoder.finish()])
       }
       render(); device.lost.then((info) => { if (!stopped) setError(`WebGPU device lost: ${info.message}`) })
     }

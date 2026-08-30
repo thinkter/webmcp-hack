@@ -3,9 +3,11 @@ import { getOperatorDefinition, useGraphStore } from '../graph/store'
 import type { EffectKind } from '../graph/types'
 const effects: EffectKind[] = ['vhs', 'chromatic', 'pixelate', 'kaleidoscope', 'none']
 export function Inspector() {
-  const { nodes, selectedNodeId, setNodeParameter, setEffect, deleteNode, duplicateNode, toggleBypass } = useGraphStore()
+  const { nodes, edges, selectedNodeId, selectedEdgeId, setNodeParameter, setEffect, deleteNode, duplicateNode, toggleBypass, deleteSelection } = useGraphStore()
   const node = nodes.find((item) => item.id === selectedNodeId)
-  if (!node) return <div className="inspector empty"><span>SELECT A NODE</span><p>Choose a graph node to inspect its live parameters.</p></div>
+  const edge=edges.find(item=>item.id===selectedEdgeId)
+  if(edge){const source=nodes.find(item=>item.id===edge.source),target=nodes.find(item=>item.id===edge.target);return <div className="inspector link-inspector"><div className="inspector-title"><span>LINK INSPECTOR</span><strong>{String(edge.data?.portType??'data').toUpperCase()}</strong></div><div className="link-route"><div><span>FROM</span><strong>{source?.data.label}</strong><small>{edge.sourceHandle}</small></div><b>→</b><div><span>TO</span><strong>{target?.data.label}</strong><small>{edge.targetHandle}</small></div></div><p>Select a wire and press Delete or Backspace, or use the button below.</p><button className="danger-button" onClick={deleteSelection}><Trash2 size={14}/>Delete link</button></div>}
+  if (!node) return <div className="inspector empty"><span>SELECT A NODE OR LINK</span><p>Inspect parameters, routing, and live graph state here.</p></div>
   const definition=getOperatorDefinition(node)
   return <div className="inspector">
     <div className="inspector-title"><span>INSPECTOR · {node.data.family}</span><strong>{node.data.label}</strong></div>
