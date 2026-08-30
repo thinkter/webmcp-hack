@@ -1,0 +1,7 @@
+node_modules
+dist
+.DS_Store
+*.local
+*.log
+.devpost-hackathon-state.json
+docs/hackathon-build/
