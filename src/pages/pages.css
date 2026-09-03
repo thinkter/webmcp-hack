@@ -1,0 +1,703 @@
+/**
+ * Styling for the two standalone companion screens (`/join`, `/output`).
+ *
+ * Deliberately self-contained and namespaced under `.vjp`:
+ *
+ * - `src/styles.css` is loaded globally by `main.tsx` and is being rewritten,
+ *   so nothing here may inherit from it. Every property these screens rely on
+ *   (font, colour, box-sizing, control appearance) is declared locally, and the
+ *   roots are `position: fixed; inset: 0` so a stray `body` rule from the editor
+ *   theme cannot show through or shift the layout.
+ * - Both roots opt out of the editor's `body { overflow: hidden }` by scrolling
+ *   their own content region instead, which matters on a short phone screen in
+ *   landscape.
+ *
+ * Sizing rules of thumb: nothing tappable is under 48px, the primary action is
+ * 72px, and text is 15px minimum. This is read at arm's length, one-handed, in
+ * a dark room, by someone who has never seen the app before.
+ */
+
+.vjp {
+  --vjp-bg: #05070a;
+  --vjp-panel: #0d1219;
+  --vjp-panel-2: #141b24;
+  --vjp-line: #232c38;
+  --vjp-text: #eef2f7;
+  --vjp-muted: #9aa6b4;
+  --vjp-accent: #b9ff66;
+  --vjp-accent-ink: #071006;
+  --vjp-warn: #ffc65c;
+  --vjp-error: #ff6f5e;
+  --vjp-safe-t: env(safe-area-inset-top, 0px);
+  --vjp-safe-b: env(safe-area-inset-bottom, 0px);
+  --vjp-safe-l: env(safe-area-inset-left, 0px);
+  --vjp-safe-r: env(safe-area-inset-right, 0px);
+
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow: hidden;
+  color: var(--vjp-text);
+  background: var(--vjp-bg);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    system-ui,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  /* Stops iOS from inflating text in landscape and breaking the layout. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Kills the 300ms tap delay and the grey flash on every button press. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vjp *,
+.vjp *::before,
+.vjp *::after {
+  box-sizing: border-box;
+}
+
+.vjp h1,
+.vjp h2,
+.vjp p,
+.vjp ol,
+.vjp ul {
+  margin: 0;
+}
+
+.vjp code,
+.vjp kbd,
+.vjp .vjp-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.vjp button,
+.vjp input,
+.vjp select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* ------------------------------------------------------------- controls ---- */
+
+.vjp .vjp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 0 20px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 14px;
+  background: var(--vjp-panel-2);
+  color: var(--vjp-text);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.vjp .vjp-btn:active {
+  transform: scale(0.985);
+}
+
+.vjp .vjp-btn:focus-visible {
+  outline: 2px solid var(--vjp-accent);
+  outline-offset: 2px;
+}
+
+.vjp .vjp-btn[disabled] {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.vjp .vjp-btn-primary {
+  min-height: 72px;
+  border-color: transparent;
+  background: var(--vjp-accent);
+  color: var(--vjp-accent-ink);
+  font-size: 20px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 40px rgba(185, 255, 102, 0.18);
+}
+
+.vjp .vjp-btn-danger {
+  border-color: #52302c;
+  background: #1d1211;
+  color: #ff9b8f;
+}
+
+.vjp .vjp-btn-icon {
+  width: 64px;
+  min-height: 64px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.vjp .vjp-btn-small {
+  min-height: 48px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.vjp select.vjp-select {
+  width: 100%;
+  min-height: 56px;
+  padding: 0 40px 0 16px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 14px;
+  background-color: var(--vjp-panel-2);
+  /* Native select chevrons are invisible on a dark background in Safari. */
+  background-image: linear-gradient(45deg, transparent 50%, var(--vjp-muted) 50%),
+    linear-gradient(135deg, var(--vjp-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 22px) calc(50% - 2px),
+    calc(100% - 16px) calc(50% - 2px);
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  font-size: 16px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.vjp input.vjp-input {
+  width: 100%;
+  min-height: 68px;
+  padding: 0 16px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 14px;
+  background: #080c11;
+  color: var(--vjp-text);
+  /* 16px+ or iOS Safari zooms the viewport the moment the field is focused. */
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.vjp input.vjp-input:focus {
+  outline: none;
+  border-color: var(--vjp-accent);
+}
+
+.vjp input.vjp-input.vjp-input-plain {
+  font-size: 18px;
+  letter-spacing: 0.06em;
+  text-transform: none;
+}
+
+/* ---------------------------------------------------------------- chrome ---- */
+
+.vjp .vjp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 999px;
+  background: rgba(6, 9, 13, 0.72);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+}
+
+.vjp .vjp-pill i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--vjp-muted);
+}
+
+.vjp .vjp-pill.is-live {
+  border-color: #2f5c33;
+  color: var(--vjp-accent);
+}
+
+.vjp .vjp-pill.is-live i {
+  background: var(--vjp-accent);
+  box-shadow: 0 0 12px var(--vjp-accent);
+  animation: vjp-throb 1.6s ease-in-out infinite;
+}
+
+.vjp .vjp-pill.is-connecting {
+  border-color: #5c4a24;
+  color: var(--vjp-warn);
+}
+
+.vjp .vjp-pill.is-connecting i {
+  background: var(--vjp-warn);
+  animation: vjp-throb 0.9s ease-in-out infinite;
+}
+
+.vjp .vjp-pill.is-error {
+  border-color: #5c2f2a;
+  color: var(--vjp-error);
+}
+
+.vjp .vjp-pill.is-error i {
+  background: var(--vjp-error);
+}
+
+@keyframes vjp-throb {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vjp .vjp-pill i,
+  .vjp .vjp-spin {
+    animation: none !important;
+  }
+}
+
+.vjp .vjp-spin {
+  animation: vjp-rotate 1.1s linear infinite;
+}
+
+@keyframes vjp-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.vjp .vjp-note {
+  display: flex;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 14px;
+  background: rgba(9, 13, 18, 0.9);
+  font-size: 15px;
+  backdrop-filter: blur(8px);
+}
+
+.vjp .vjp-note svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.vjp .vjp-note strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.vjp .vjp-note p {
+  color: var(--vjp-muted);
+}
+
+.vjp .vjp-note.is-warn {
+  border-color: #5a4826;
+  color: var(--vjp-warn);
+}
+
+.vjp .vjp-note.is-error {
+  border-color: #5a2f29;
+  color: #ffb3a8;
+}
+
+.vjp .vjp-note.is-warn p,
+.vjp .vjp-note.is-error p {
+  color: #d9dde3;
+}
+
+.vjp .vjp-steps {
+  margin: 10px 0 0;
+  padding-left: 22px;
+  color: #d9dde3;
+  font-size: 14px;
+  line-height: 1.65;
+  /* Stated outright because the editor's global reset does `ol { list-style:
+     none }`, and numbered recovery steps are useless unmarked. */
+  list-style: decimal outside;
+}
+
+.vjp .vjp-steps li::marker {
+  color: var(--vjp-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.vjp .vjp-steps li + li {
+  margin-top: 4px;
+}
+
+.vjp .vjp-muted {
+  color: var(--vjp-muted);
+  font-size: 14px;
+}
+
+.vjp .vjp-dismiss {
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: -8px -8px -8px 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* ============================================================ join page ==== */
+
+.vjp-join {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+/* The camera preview is a background layer, not a box in the flow: the controls
+   float on top of it so the picture is as large as the screen allows. */
+.vjp-join-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  /* A front-facing preview that is not mirrored reads as broken to everybody. */
+  transform: scaleX(1);
+}
+
+.vjp-join-video.is-mirrored {
+  transform: scaleX(-1);
+}
+
+.vjp-join-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(3, 5, 8, 0.88) 0%, rgba(3, 5, 8, 0.15) 26%, rgba(3, 5, 8, 0.2) 54%, rgba(3, 5, 8, 0.92) 100%);
+}
+
+.vjp-join-veil.is-blank {
+  background: radial-gradient(circle at 50% 22%, #16202b 0%, #05070a 62%);
+}
+
+.vjp-join > header,
+.vjp-join > .vjp-join-body,
+.vjp-join > footer {
+  position: relative;
+  z-index: 1;
+}
+
+.vjp-join > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: calc(16px + var(--vjp-safe-t)) calc(16px + var(--vjp-safe-r)) 12px calc(16px + var(--vjp-safe-l));
+}
+
+.vjp-join-identity span {
+  display: block;
+  color: var(--vjp-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.vjp-join-identity strong {
+  display: block;
+  margin: 2px 0 4px;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.7);
+}
+
+.vjp-join-identity code {
+  color: var(--vjp-muted);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.vjp-join-body {
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px calc(16px + var(--vjp-safe-r)) 4px calc(16px + var(--vjp-safe-l));
+}
+
+.vjp-join-body.is-centred {
+  justify-content: center;
+}
+
+.vjp-join > footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px calc(16px + var(--vjp-safe-r)) calc(16px + var(--vjp-safe-b)) calc(16px + var(--vjp-safe-l));
+}
+
+.vjp-join-row {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.vjp-join-row > .vjp-btn,
+.vjp-join-row > .vjp-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* -------------------------------------------------------- join: gate screen -- */
+
+.vjp-gate {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  padding: calc(24px + var(--vjp-safe-t)) calc(20px + var(--vjp-safe-r)) calc(24px + var(--vjp-safe-b))
+    calc(20px + var(--vjp-safe-l));
+  overflow-y: auto;
+  background: radial-gradient(circle at 50% 12%, #17212c 0%, #05070a 60%);
+}
+
+.vjp-gate-mark {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--vjp-panel-2);
+  color: var(--vjp-accent);
+}
+
+.vjp-gate-mark.is-warn {
+  color: var(--vjp-warn);
+}
+
+.vjp-gate h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.vjp-gate > p {
+  max-width: 46ch;
+  color: var(--vjp-muted);
+  font-size: 16px;
+}
+
+.vjp-gate form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vjp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vjp-field > span {
+  color: var(--vjp-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.vjp-gate-detail {
+  padding: 14px 16px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 14px;
+  background: var(--vjp-panel);
+  color: #d9dde3;
+  font-size: 15px;
+}
+
+.vjp-gate-detail code {
+  overflow-wrap: anywhere;
+  color: var(--vjp-accent);
+  font-size: 13px;
+}
+
+/* ========================================================== output page ==== */
+
+.vjp-output {
+  display: grid;
+  place-items: center;
+  background: #000;
+}
+
+/* Hiding the cursor is part of "no chrome": a white arrow parked in the middle
+   of a projection is as distracting as a visible toolbar. */
+.vjp-output.is-idle {
+  cursor: none;
+}
+
+.vjp-output-frame {
+  position: relative;
+  /* Letterbox: fill the viewport on whichever axis binds first, and derive the
+     other from the graph's aspect ratio. The `dvh` form is set inline; this
+     `vh` declaration is the fallback for engines without `dvh`. */
+  width: min(100vw, calc(100vh * var(--vjp-ar, 1.7778)));
+  max-width: 100%;
+  max-height: 100%;
+  aspect-ratio: var(--vjp-ar, 1.7778);
+  background: #000;
+}
+
+.vjp-output-frame canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.vjp-output-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 14px calc(14px + var(--vjp-safe-r)) calc(14px + var(--vjp-safe-b)) calc(14px + var(--vjp-safe-l));
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.82), rgba(0, 0, 0, 0));
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.vjp-output-overlay.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vjp-output-overlay .vjp-pill.is-quiet {
+  color: var(--vjp-muted);
+  font-weight: 500;
+}
+
+.vjp-output-overlay .vjp-spacer {
+  flex: 1 1 auto;
+}
+
+.vjp-output-overlay .vjp-btn {
+  min-height: 48px;
+}
+
+.vjp-output-overlay kbd {
+  padding: 3px 6px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 5px;
+  color: var(--vjp-muted);
+  font-size: 11px;
+}
+
+/* Centred status card, used for every state where the projector has nothing
+   real to show. Sized so it is legible from the back of a room. */
+.vjp-output-card {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 8vmin;
+  text-align: center;
+  background: rgba(3, 5, 8, 0.86);
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* A card that only explains a picture the projector is already showing hides
+   with the rest of the chrome. */
+.vjp-output-card.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.vjp-output-card .vjp-gate-mark {
+  width: 64px;
+  height: 64px;
+}
+
+.vjp-output-card strong {
+  font-size: clamp(22px, 3.4vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.vjp-output-card p {
+  max-width: 60ch;
+  color: var(--vjp-muted);
+  font-size: clamp(15px, 1.5vw, 20px);
+}
+
+.vjp-output-card small {
+  color: #6f7a87;
+  font-size: clamp(13px, 1.1vw, 16px);
+}
+
+.vjp-output-card .vjp-slots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.vjp-output-card .vjp-slots code {
+  padding: 8px 12px;
+  border: 1px solid var(--vjp-line);
+  border-radius: 999px;
+  background: var(--vjp-panel);
+  color: var(--vjp-accent);
+  font-size: clamp(13px, 1.2vw, 17px);
+}
+
+/* Wide-screen phones in landscape, and the room-code screen on a tablet. */
+@media (min-width: 620px) {
+  .vjp-join > header,
+  .vjp-join > .vjp-join-body,
+  .vjp-join > footer {
+    padding-left: calc(28px + var(--vjp-safe-l));
+    padding-right: calc(28px + var(--vjp-safe-r));
+  }
+
+  .vjp-gate {
+    align-items: flex-start;
+  }
+
+  .vjp-gate form,
+  .vjp-gate > p,
+  .vjp-gate-detail {
+    width: min(560px, 100%);
+  }
+}
