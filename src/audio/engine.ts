@@ -320,8 +320,6 @@ class WebAudioEngine implements AudioEngine {
     // For an <audio>/<video> element, pass `element.captureStream()` (or
     // `mozCaptureStream()`); we deliberately do not touch the element itself so
     // playback and routing to the speakers stay entirely the caller's business.
-    // Note that stop() stops the tracks it was given, which ends a capture
-    // stream for good — call captureStream() again to re-attach.
     const generation = this.beginStart()
     const run = this.wire(stream, 'stream', null, generation)
     this.pending = run
@@ -345,7 +343,9 @@ class WebAudioEngine implements AudioEngine {
   ): Promise<void> {
     const Constructor = getAudioContextConstructor()
     if (!Constructor) {
-      for (const track of stream.getTracks()) track.stop()
+      if (kind === 'mic') {
+        for (const track of stream.getTracks()) track.stop()
+      }
       this.fail('This browser does not support the Web Audio API.')
       return
     }
@@ -365,13 +365,17 @@ class WebAudioEngine implements AudioEngine {
     }
 
     if (generation !== this.generation) {
-      for (const track of stream.getTracks()) track.stop()
+      if (kind === 'mic') {
+        for (const track of stream.getTracks()) track.stop()
+      }
       void context.close().catch(() => undefined)
       return
     }
 
     if (context.state !== 'running') {
-      for (const track of stream.getTracks()) track.stop()
+      if (kind === 'mic') {
+        for (const track of stream.getTracks()) track.stop()
+      }
       void context.close().catch(() => undefined)
       this.fail(
         'The browser blocked audio until the page receives a user gesture. Click anywhere in the page, then start the audio input again.',
@@ -396,7 +400,9 @@ class WebAudioEngine implements AudioEngine {
       // AnalyserNode pulls data without needing a downstream sink.
       source.connect(analyser)
     } catch (cause) {
-      for (const track of stream.getTracks()) track.stop()
+      if (kind === 'mic') {
+        for (const track of stream.getTracks()) track.stop()
+      }
       void context.close().catch(() => undefined)
       this.fail(describeError(cause, 'That stream has no audio track to analyse.'))
       return
@@ -466,7 +472,9 @@ class WebAudioEngine implements AudioEngine {
       this.analyser = null
     }
     if (this.stream) {
-      for (const track of this.stream.getTracks()) track.stop()
+      if (this.sourceKind === 'mic') {
+        for (const track of this.stream.getTracks()) track.stop()
+      }
       this.stream = null
     }
     if (this.context) {

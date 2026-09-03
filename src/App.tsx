@@ -34,6 +34,7 @@ import { registerAgentTools } from './webmcp/register'
 import { parseRoomParams } from './remote/links'
 import { JoinPage } from './pages/JoinPage'
 import { OutputPage } from './pages/OutputPage'
+import { mediaHub } from './remote/hub'
 
 const nodeTypes = { operator: OperatorNode }
 const AUTOSAVE_KEY = 'visual-engine:autosave:v3'
@@ -104,6 +105,13 @@ function Workspace() {
     void engine.start()
     return () => engine.stop()
   }, [])
+
+  // Join media hub when room is available so collaborators can exchange video/audio
+  useEffect(() => {
+    if (!session.room) return
+    mediaHub.joinAsEditor(session.room)
+    return () => mediaHub.leave()
+  }, [session.room])
 
   // WebMCP tool surface: registers graph inspection & control tools
   // on document.modelContext according to the W3C WebMCP specification.

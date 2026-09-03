@@ -1,51 +1,57 @@
 /**
- * WebRTC media hub.
+ * WebRTC media hub with symmetric peer-to-peer negotiation.
  *
- * Topology is intentionally asymmetric and fixed:
- *
- *   publisher (phone camera)  --offer-->  editor (laptop running the graph)
- *
- * The publisher always creates the offer, the editor always answers. Fixing the
- * direction removes almost all of the glare that perfect negotiation exists to
- * handle, but the guards are still implemented (see `#onDescription`) because a
- * camera switch or an ICE restart can produce a second offer while the editor
- * is still applying the first.
+ * Topology:
+ *   - Any peer (editor, phone publisher, display) in the same room can establish
+ *     a WebRTC peer connection.
+ *   - Perfect negotiation (polite / impolite based on peerId comparison: `peerId < remotePeerId`)
+ *     handles simultaneous offers and re-negotiation smoothly without collision deadlocks.
+ *   - Peers can publish multiple local streams (e.g. webcam, screen share) to designated
+ *     slots (`cam-1`, `screen-1`, etc.).
+ *   - Incoming streams from any peer are registered into `mediaHub.streams` by slot.
+ *   - Local published streams are also mirrored in `mediaHub.streams` and `mediaHub.localStreams`
+ *     so the local editor/renderer can access them immediately.
  *
  * No React here; `subscribe()` is for `useSyncExternalStore`.
  */
 
 import { signalClient, type PeerInfo } from './signal'
 
-export type RemoteStream = { slot: string; peerId: string; label: string; stream: MediaStream; since: number }
+export type RemoteStream = {
+  slot: string
+  peerId: string
+  label: string
+  stream: MediaStream
+  since: number
+  isLocal?: boolean
+}
+
 export type HubStatus = 'offline' | 'connecting' | 'online' | 'error'
 
 export interface MediaHub {
   readonly status: HubStatus
   readonly error: string | null
   readonly room: string | null
-  /** Streams currently arriving from publishers, keyed by slot. */
+  /** Streams currently active in the room (both remote and local), keyed by slot. */
   readonly streams: Map<string, RemoteStream>
-  /** Editor side: join a room and accept incoming publisher streams. */
+  /** Local streams published by this client, keyed by slot. */
+  readonly localStreams: Map<string, { slot: string; label: string; stream: MediaStream }>
+  /** Editor side: join a room and communicate with all peers. */
   joinAsEditor(room: string): void
   /** Publisher side (phone): join and send this stream on the given slot. */
   publish(room: string, slot: string, label: string, stream: MediaStream): void
-  /** Stop publishing but stay connected. */
+  /** Publish a stream on a specific slot (works for both editors and publishers). */
+  publishStream(slot: string, label: string, stream: MediaStream): void
+  /** Stop publishing a specific slot. */
+  unpublishSlot(slot: string): void
+  /** Stop publishing the legacy primary stream or all local streams. */
   unpublish(): void
   leave(): void
   subscribe(listener: () => void): () => void
 }
 
 /**
- * Public STUN only.
- *
- * The primary use case — phone and laptop on the same Wi-Fi — connects on host
- * candidates alone and would work even with an empty ICE server list; STUN is
- * here for the case where the two devices are on different subnets of the same
- * network. Anything that crosses a real NAT boundary (phone on cellular, editor
- * behind a symmetric NAT, corporate/guest Wi-Fi with client isolation) needs a
- * TURN relay, which cannot be a public freebie because it carries the media.
- * Add one here as `{ urls, username, credential }` if the demo has to leave the
- * LAN.
+ * Public STUN servers.
  */
 const ICE_SERVERS: RTCIceServer[] = [
   { urls: 'stun:stun.l.google.com:19302' },
@@ -54,25 +60,39 @@ const ICE_SERVERS: RTCIceServer[] = [
 
 type Mode = 'idle' | 'editor' | 'publisher'
 
-type Description = { kind: 'description'; description: RTCSessionDescriptionInit; slot: string; label: string }
+type Description = {
+  kind: 'description'
+  description: RTCSessionDescriptionInit
+  slot: string
+  label: string
+  streamId?: string
+}
+
 type Candidate = { kind: 'candidate'; candidate: RTCIceCandidateInit | null }
-/** Editor -> publisher: "my ICE died, please re-offer with an ICE restart." */
 type RestartRequest = { kind: 'restart' }
-type HubMessage = Description | Candidate | RestartRequest
+type SlotAnnouncement = { kind: 'slots'; slots: Array<{ slot: string; label: string; streamId: string }> }
+
+type HubMessage = Description | Candidate | RestartRequest | SlotAnnouncement
+
+type LocalPublication = {
+  slot: string
+  label: string
+  stream: MediaStream
+}
 
 type Conn = {
   readonly peerId: string
   readonly pc: RTCPeerConnection
-  /** The polite peer yields on collision. The editor (answerer) is polite. */
   readonly polite: boolean
-  slot: string
-  label: string
   makingOffer: boolean
   ignoreOffer: boolean
   settingRemoteAnswer: boolean
   iceRestarted: boolean
-  senders: RTCRtpSender[]
+  /** Map from track ID to sender */
+  senders: Map<string, RTCRtpSender>
   closed: boolean
+  /** Remote slots advertised by this peer: slot -> { label, streamId } */
+  remoteSlots: Map<string, { label: string; streamId: string }>
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -87,6 +107,18 @@ const parseMessage = (payload: unknown): HubMessage | null => {
     if (!isRecord(c)) return null
     return { kind: 'candidate', candidate: c as RTCIceCandidateInit }
   }
+  if (payload.kind === 'slots' && Array.isArray(payload.slots)) {
+    return {
+      kind: 'slots',
+      slots: payload.slots
+        .filter(isRecord)
+        .map((s) => ({
+          slot: typeof s.slot === 'string' ? s.slot : '',
+          label: typeof s.label === 'string' ? s.label : '',
+          streamId: typeof s.streamId === 'string' ? s.streamId : '',
+        })),
+    }
+  }
   if (payload.kind === 'description' && isRecord(payload.description)) {
     const { type, sdp } = payload.description
     if (type !== 'offer' && type !== 'answer' && type !== 'pranswer' && type !== 'rollback') return null
@@ -95,6 +127,7 @@ const parseMessage = (payload: unknown): HubMessage | null => {
       description: { type, sdp: typeof sdp === 'string' ? sdp : undefined },
       slot: typeof payload.slot === 'string' ? payload.slot : '',
       label: typeof payload.label === 'string' ? payload.label : '',
+      streamId: typeof payload.streamId === 'string' ? payload.streamId : undefined,
     }
   }
   return null
@@ -108,11 +141,11 @@ class MediaHubImpl implements MediaHub {
   error: string | null = null
   room: string | null = null
   streams: Map<string, RemoteStream> = new Map()
+  localStreams: Map<string, LocalPublication> = new Map()
 
   #mode: Mode = 'idle'
-  #localStream: MediaStream | null = null
-  #slot = ''
-  #label = ''
+  #legacySlot = ''
+  #legacyLabel = ''
 
   readonly #conns = new Map<string, Conn>()
   readonly #listeners = new Set<() => void>()
@@ -137,55 +170,87 @@ class MediaHubImpl implements MediaHub {
       return
     }
 
-    const switchingStreamOnly = this.#mode === 'publisher' && this.room === room && this.#slot === slot
-    this.#localStream = stream
-    this.#slot = slot
-    this.#label = label
+    this.#legacySlot = slot
+    this.#legacyLabel = label
 
-    if (switchingStreamOnly) {
-      // Camera flip / device change: swap the outgoing track in place.
-      // replaceTrack does not touch the SDP, so no renegotiation and no visible
-      // freeze on the editor side.
-      for (const conn of this.#conns.values()) {
-        conn.slot = slot
-        conn.label = label
-        this.#applyLocalTracks(conn)
-      }
+    if (this.#mode !== 'publisher' || this.room !== room) {
+      this.#resetForJoin(room, 'publisher')
       signalClient.connect(room, { role: 'publisher', slot, label })
-      this.#syncStatus()
-      return
     }
 
-    this.#resetForJoin(room, 'publisher')
-    this.#localStream = stream
-    this.#slot = slot
-    this.#label = label
-    signalClient.connect(room, { role: 'publisher', slot, label })
-    this.#syncStatus()
+    this.publishStream(slot, label, stream)
   }
 
-  unpublish(): void {
-    this.#localStream = null
+  publishStream(slot: string, label: string, stream: MediaStream): void {
+    this.localStreams.set(slot, { slot, label, stream })
+
+    // Also add to streams map so local nodes can see it
+    const nextStreams = new Map(this.streams)
+    nextStreams.set(slot, {
+      slot,
+      peerId: signalClient.peerId,
+      label,
+      stream,
+      since: Date.now(),
+      isLocal: true,
+    })
+    this.streams = nextStreams
+
+    // Apply tracks to all active connections
     for (const conn of this.#conns.values()) {
-      for (const sender of conn.senders) {
-        // null keeps the transceiver (and therefore the negotiated m-line)
-        // alive while sending nothing, so resuming needs no renegotiation.
-        void sender.replaceTrack(null).catch((err: unknown) => {
-          console.warn('[hub] replaceTrack(null) failed:', err)
-        })
-      }
+      this.#syncConnTracks(conn)
     }
+
+    // Broadcast updated slot announcements to all peers
+    this.#broadcastSlots()
     this.#notify()
   }
 
+  unpublishSlot(slot: string): void {
+    const pub = this.localStreams.get(slot)
+    if (!pub) return
+
+    this.localStreams.delete(slot)
+
+    // Remove tracks from connections
+    for (const track of pub.stream.getTracks()) {
+      for (const conn of this.#conns.values()) {
+        const sender = conn.senders.get(track.id)
+        if (sender) {
+          try {
+            conn.pc.removeTrack(sender)
+          } catch {
+            /* ignore */
+          }
+          conn.senders.delete(track.id)
+        }
+      }
+    }
+
+    // Remove local stream from streams map
+    const current = this.streams.get(slot)
+    if (current && current.peerId === signalClient.peerId) {
+      const nextStreams = new Map(this.streams)
+      nextStreams.delete(slot)
+      this.streams = nextStreams
+    }
+
+    this.#broadcastSlots()
+    this.#notify()
+  }
+
+  unpublish(): void {
+    for (const slot of [...this.localStreams.keys()]) {
+      this.unpublishSlot(slot)
+    }
+  }
+
   leave(): void {
+    this.unpublish()
     this.#closeAllConns()
     this.#detachSignal()
-    // The MediaStream belongs to whoever called publish(); stopping its tracks
-    // here would kill a camera preview the UI is still showing.
-    this.#localStream = null
-    this.#slot = ''
-    this.#label = ''
+    this.#legacySlot = ''
+    this.#legacyLabel = ''
     this.#mode = 'idle'
     this.room = null
     this.error = null
@@ -214,10 +279,10 @@ class MediaHubImpl implements MediaHub {
     this.#closeAllConns()
     this.#detachSignal()
     if (this.streams.size > 0) this.streams = new Map()
+    this.localStreams.clear()
     this.#mode = mode
     this.room = room
     this.error = null
-    this.#localStream = null
 
     this.#unsubSignal = signalClient.onSignal((from, payload) => {
       void this.#onSignal(from, payload)
@@ -239,6 +304,19 @@ class MediaHubImpl implements MediaHub {
     this.#unsubStore = null
   }
 
+  #broadcastSlots(): void {
+    if (this.room === null) return
+    const slots = [...this.localStreams.values()].map((pub) => ({
+      slot: pub.slot,
+      label: pub.label,
+      streamId: pub.stream.id,
+    }))
+    const msg: SlotAnnouncement = { kind: 'slots', slots }
+    for (const conn of this.#conns.values()) {
+      signalClient.send(conn.peerId, msg)
+    }
+  }
+
   #onPeers(peers: PeerInfo[]): void {
     const present = new Set(peers.map((p) => p.peerId))
 
@@ -248,31 +326,26 @@ class MediaHubImpl implements MediaHub {
       this.#dropConn(conn, 'peer left')
     }
 
-    if (this.#mode === 'publisher') {
-      // Offer to every editor in the room, including ones that join later.
-      // `display` peers are skipped on purpose: a projector consumes the
-      // editor's rendered output, not a raw camera, so sending to it would
-      // burn an RTCPeerConnection on the phone for nothing. A display that
-      // does want raw publisher streams should join via `joinAsEditor`.
-      for (const peer of peers) {
-        if (peer.peerId === signalClient.peerId) continue
-        if (peer.role !== 'editor') continue
-        if (this.#conns.has(peer.peerId)) continue
-        const conn = this.#createConn(peer.peerId, false)
-        conn.slot = this.#slot
-        conn.label = this.#label
-        this.#applyLocalTracks(conn)
-      }
-    } else if (this.#mode === 'editor') {
-      // Editors do not initiate; keep the advertised slot/label fresh for any
-      // publisher we already have a connection with.
-      for (const peer of peers) {
-        const conn = this.#conns.get(peer.peerId)
-        if (conn === undefined || peer.role !== 'publisher') continue
-        if (peer.slot !== '' && conn.slot !== peer.slot) {
-          this.#renameSlot(conn, peer.slot)
+    // Connect to every other peer in the room (editors and publishers)
+    for (const peer of peers) {
+      if (peer.peerId === signalClient.peerId) continue
+      // Skip pure display peers (projector) unless they published a stream
+      if (peer.role === 'display') continue
+
+      let conn = this.#conns.get(peer.peerId)
+      if (!conn) {
+        // Tie-breaker for perfect negotiation:
+        // The peer with the alphabetically smaller peerId is polite.
+        const polite = signalClient.peerId < peer.peerId
+        conn = this.#createConn(peer.peerId, polite)
+        if (peer.slot) {
+          conn.remoteSlots.set(peer.slot, { label: peer.label || peer.slot, streamId: '' })
         }
-        if (peer.label !== '') conn.label = peer.label
+        this.#syncConnTracks(conn)
+      } else {
+        if (peer.slot && !conn.remoteSlots.has(peer.slot)) {
+          conn.remoteSlots.set(peer.slot, { label: peer.label || peer.slot, streamId: '' })
+        }
       }
     }
 
@@ -285,14 +358,13 @@ class MediaHubImpl implements MediaHub {
       peerId,
       pc,
       polite,
-      slot: '',
-      label: '',
       makingOffer: false,
       ignoreOffer: false,
       settingRemoteAnswer: false,
       iceRestarted: false,
-      senders: [],
+      senders: new Map(),
       closed: false,
+      remoteSlots: new Map(),
     }
     this.#conns.set(peerId, conn)
 
@@ -316,9 +388,8 @@ class MediaHubImpl implements MediaHub {
       if (pc.iceConnectionState !== 'failed') return
       if (!conn.iceRestarted) {
         conn.iceRestarted = true
-        console.warn(`[hub] ICE failed with ${peerId}, attempting one restart`)
+        console.warn(`[hub] ICE failed with ${peerId}, attempting restart`)
         if (conn.polite) {
-          // Only the offerer can perform an ICE restart, so ask them to.
           const request: RestartRequest = { kind: 'restart' }
           signalClient.send(peerId, request)
         } else {
@@ -335,9 +406,17 @@ class MediaHubImpl implements MediaHub {
 
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === 'connected') {
-        // A successful (re)connect clears a previous transient failure.
         conn.iceRestarted = false
         if (this.error !== null) this.error = null
+        // Send our published slots announcement to newly connected peer
+        const slots = [...this.localStreams.values()].map((pub) => ({
+          slot: pub.slot,
+          label: pub.label,
+          streamId: pub.stream.id,
+        }))
+        if (slots.length > 0) {
+          signalClient.send(peerId, { kind: 'slots', slots } satisfies SlotAnnouncement)
+        }
       }
       if (pc.connectionState === 'closed') {
         this.#dropConn(conn, 'connection closed')
@@ -348,34 +427,40 @@ class MediaHubImpl implements MediaHub {
     return conn
   }
 
-  /** Attach or swap the local stream's tracks on a publisher connection. */
-  #applyLocalTracks(conn: Conn): void {
-    const stream = this.#localStream
-    if (stream === null) return
-    const tracks = stream.getTracks()
-    if (tracks.length === 0) return
+  /** Synchronizes local tracks to a peer connection. */
+  #syncConnTracks(conn: Conn): void {
+    if (conn.closed) return
+    const activeTrackIds = new Set<string>()
 
-    if (conn.senders.length === 0) {
-      conn.senders = tracks.map((track) => conn.pc.addTrack(track, stream))
-      return
+    for (const pub of this.localStreams.values()) {
+      for (const track of pub.stream.getTracks()) {
+        activeTrackIds.add(track.id)
+        if (!conn.senders.has(track.id)) {
+          try {
+            const sender = conn.pc.addTrack(track, pub.stream)
+            conn.senders.set(track.id, sender)
+          } catch (err) {
+            console.warn(`[hub] failed to addTrack ${track.id}:`, err)
+          }
+        }
+      }
     }
 
-    // Existing connection: replaceTrack per kind, never addTrack again.
-    for (const sender of conn.senders) {
-      const kind = sender.track?.kind
-      const replacement =
-        tracks.find((t) => t.kind === kind) ??
-        (kind === undefined ? tracks.find((t) => t.kind === 'video') : undefined)
-      if (replacement === undefined) continue
-      if (sender.track === replacement) continue
-      void sender.replaceTrack(replacement).catch((err: unknown) => {
-        console.warn('[hub] replaceTrack failed:', err)
-      })
+    // Remove senders for tracks that are no longer local
+    for (const [trackId, sender] of [...conn.senders.entries()]) {
+      if (!activeTrackIds.has(trackId)) {
+        try {
+          conn.pc.removeTrack(sender)
+        } catch {
+          /* ignore */
+        }
+        conn.senders.delete(trackId)
+      }
     }
   }
 
   async #negotiate(conn: Conn): Promise<void> {
-    if (conn.closed || conn.polite) return
+    if (conn.closed) return
     try {
       conn.makingOffer = true
       await conn.pc.setLocalDescription()
@@ -384,8 +469,8 @@ class MediaHubImpl implements MediaHub {
       const message: Description = {
         kind: 'description',
         description: { type: local.type, sdp: local.sdp },
-        slot: this.#slot,
-        label: this.#label,
+        slot: this.#legacySlot,
+        label: this.#legacyLabel,
       }
       signalClient.send(conn.peerId, message)
     } catch (err) {
@@ -403,10 +488,26 @@ class MediaHubImpl implements MediaHub {
 
     let conn = this.#conns.get(from)
     if (conn === undefined) {
-      // Only the editor accepts a connection it did not initiate, and only in
-      // response to a description (a stray candidate is not worth a new pc).
-      if (this.#mode !== 'editor' || message.kind !== 'description') return
-      conn = this.#createConn(from, true)
+      // Connect to any peer offering a connection
+      const polite = signalClient.peerId < from
+      conn = this.#createConn(from, polite)
+    }
+
+    if (message.kind === 'slots') {
+      for (const s of message.slots) {
+        conn.remoteSlots.set(s.slot, { label: s.label, streamId: s.streamId })
+        // If we already have a stream matching this streamId, ensure its slot is correct
+        for (const [slotKey, remoteStream] of this.streams.entries()) {
+          if (remoteStream.peerId === from && remoteStream.stream.id === s.streamId && slotKey !== s.slot) {
+            const nextStreams = new Map(this.streams)
+            nextStreams.delete(slotKey)
+            nextStreams.set(s.slot, { ...remoteStream, slot: s.slot, label: s.label || s.slot })
+            this.streams = nextStreams
+            this.#notify()
+          }
+        }
+      }
+      return
     }
 
     if (message.kind === 'restart') {
@@ -422,11 +523,8 @@ class MediaHubImpl implements MediaHub {
 
     if (message.kind === 'candidate') {
       try {
-        // `null` means end-of-candidates; addIceCandidate accepts it.
         await conn.pc.addIceCandidate(message.candidate ?? undefined)
       } catch (err) {
-        // Candidates that arrive for an offer we deliberately ignored are
-        // expected garbage, not a real failure.
         if (!conn.ignoreOffer) console.warn('[hub] addIceCandidate failed:', err)
       }
       return
@@ -439,15 +537,12 @@ class MediaHubImpl implements MediaHub {
     const { pc } = conn
     const description = message.description
 
-    if (message.slot !== '') this.#renameSlot(conn, message.slot)
-    if (message.label !== '') conn.label = message.label
+    if (message.slot !== '') {
+      conn.remoteSlots.set(message.slot, { label: message.label || message.slot, streamId: message.streamId || '' })
+    }
 
     /**
-     * Perfect negotiation guard. `readyForOffer` is false while we have an
-     * un-answered local offer or a remote answer still being applied; taking a
-     * remote offer in that window is what deadlocks a peer connection. The
-     * impolite side (the publisher) drops the colliding offer; the polite side
-     * (the editor) rolls back implicitly via setRemoteDescription.
+     * Perfect negotiation guard.
      */
     const readyForOffer = !conn.makingOffer && (pc.signalingState === 'stable' || conn.settingRemoteAnswer)
     const offerCollision = description.type === 'offer' && !readyForOffer
@@ -468,8 +563,8 @@ class MediaHubImpl implements MediaHub {
       const answer: Description = {
         kind: 'description',
         description: { type: local.type, sdp: local.sdp },
-        slot: this.#mode === 'publisher' ? this.#slot : conn.slot,
-        label: this.#mode === 'publisher' ? this.#label : conn.label,
+        slot: this.#legacySlot,
+        label: this.#legacyLabel,
       }
       signalClient.send(conn.peerId, answer)
     } catch (err) {
@@ -481,18 +576,39 @@ class MediaHubImpl implements MediaHub {
 
   #onTrack(conn: Conn, event: RTCTrackEvent): void {
     const stream = event.streams[0] ?? new MediaStream([event.track])
-    // Fall back to the peer id so an unlabelled publisher still shows up
-    // somewhere instead of silently overwriting slot ''.
-    const slot = conn.slot !== '' ? conn.slot : conn.peerId
-    conn.slot = slot
+
+    // Find the slot advertised for this stream or peer
+    let slot = ''
+    let label = ''
+
+    for (const [s, info] of conn.remoteSlots.entries()) {
+      if (info.streamId && info.streamId === stream.id) {
+        slot = s
+        label = info.label
+        break
+      }
+    }
+
+    if (!slot) {
+      // Pick first slot from conn.remoteSlots or fallback to peerId
+      const firstEntry = [...conn.remoteSlots.entries()][0]
+      if (firstEntry) {
+        slot = firstEntry[0]
+        label = firstEntry[1].label
+      } else {
+        slot = conn.peerId
+        label = conn.peerId
+      }
+    }
 
     const next = new Map(this.streams)
     next.set(slot, {
       slot,
       peerId: conn.peerId,
-      label: conn.label !== '' ? conn.label : conn.peerId,
+      label: label || slot,
       stream,
       since: Date.now(),
+      isLocal: false,
     })
     this.streams = next
 
@@ -512,20 +628,6 @@ class MediaHubImpl implements MediaHub {
     this.#notify()
   }
 
-  /** Move a conn's stream entry when we learn its real slot after `ontrack`. */
-  #renameSlot(conn: Conn, slot: string): void {
-    const previous = conn.slot
-    conn.slot = slot
-    if (previous === slot) return
-    const existing = this.streams.get(previous)
-    if (existing === undefined || existing.peerId !== conn.peerId) return
-    const next = new Map(this.streams)
-    next.delete(previous)
-    next.set(slot, { ...existing, slot })
-    this.streams = next
-    this.#notify()
-  }
-
   #dropConn(conn: Conn, reason: string): void {
     if (conn.closed) return
     conn.closed = true
@@ -542,13 +644,19 @@ class MediaHubImpl implements MediaHub {
     } catch {
       // Already closed.
     }
-    conn.senders = []
+    conn.senders.clear()
 
-    const stream = this.streams.get(conn.slot)
-    if (stream !== undefined && stream.peerId === conn.peerId) {
-      const next = new Map(this.streams)
-      next.delete(conn.slot)
-      this.streams = next
+    // Remove any streams coming from this peer (except our local streams)
+    const nextStreams = new Map(this.streams)
+    let changed = false
+    for (const [slot, st] of this.streams.entries()) {
+      if (st.peerId === conn.peerId && !st.isLocal) {
+        nextStreams.delete(slot)
+        changed = true
+      }
+    }
+    if (changed) {
+      this.streams = nextStreams
     }
     console.log(`[hub] dropped ${conn.peerId} (${reason})`)
     this.#notify()
