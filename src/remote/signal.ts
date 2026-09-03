@@ -33,8 +33,10 @@ export interface SignalClient {
 const VITE_PORTS = new Set(['5173', '4173'])
 const DEFAULT_SERVER_PORT = '8787'
 
-/** Escape hatch for tunnels/ngrok: set `window.__ROOM_SERVER_URL__` before load. */
+/** Escape hatch for tunnels/ngrok or env: check VITE_ROOM_SERVER_URL or window.__ROOM_SERVER_URL__. */
 const overrideUrl = (): string | null => {
+  const envUrl = typeof import.meta !== 'undefined' && import.meta.env?.VITE_ROOM_SERVER_URL
+  if (typeof envUrl === 'string' && envUrl.length > 0) return envUrl
   const value = (globalThis as { __ROOM_SERVER_URL__?: unknown }).__ROOM_SERVER_URL__
   return typeof value === 'string' && value.length > 0 ? value : null
 }
