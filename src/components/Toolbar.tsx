@@ -14,6 +14,7 @@ import {
 import { usePatchStore } from '../graph/store'
 import type { PatchDocument } from '../graph/types'
 import { useEngineStatus } from '../hooks/useEngineStatus'
+import { RoomJoin } from './RoomJoin'
 
 const RESOLUTIONS: Array<[string, number, number]> = [
   ['720p', 1280, 720],
@@ -145,6 +146,8 @@ export function Toolbar() {
           ))}
         </select>
       </div>
+
+      <RoomJoin compact />
 
       <span className="toolbar-spacer" />
 

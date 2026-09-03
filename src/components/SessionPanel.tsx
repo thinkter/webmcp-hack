@@ -11,10 +11,11 @@ import { AlertTriangle, Copy, Mic, MicOff, Music, Radio, Wifi } from 'lucide-rea
 import { audioEngine } from '../audio/engine'
 import { midiEngine } from '../audio/midi'
 import { getOperator } from '../engine/ops'
-import { isOriginPhoneReachable, joinUrl, outputUrl, parseRoomParams, qrDataUrl } from '../remote/links'
+import { isOriginPhoneReachable, joinUrl, outputUrl, qrDataUrl } from '../remote/links'
 import { resolveParams, usePatchStore } from '../graph/store'
 import { useAudioState, useEngineStatus, useMidiState, useRemoteState } from '../hooks/useEngineStatus'
 import { useSession } from '../collab/useSession'
+import { RoomJoin } from './RoomJoin'
 
 export function SessionPanel() {
   const nodes = usePatchStore((state) => state.nodes)
@@ -54,44 +55,23 @@ export function SessionPanel() {
       <header className="panel-head">
         <div>
           <span>SESSION</span>
-          <strong>{session.room}</strong>
+          <strong>{connectedLabel(session.status, session.room, session.peers)}</strong>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <button
-            type="button"
-            className={`btn-session ${session.shared ? 'is-active' : ''}`}
-            onClick={() => {
-              if (session.status === 'online' || session.status === 'connecting') {
-                session.leave()
-                if (typeof window !== 'undefined' && parseRoomParams().room !== null) {
-                  window.history.replaceState({}, '', window.location.pathname)
-                }
-              } else {
-                session.join()
-              }
-            }}
-          >
-            {session.status === 'online'
-              ? 'Disconnect'
-              : session.status === 'connecting'
-                ? 'Connecting…'
-                : 'Go Online'}
-          </button>
-          <span className={`chip status-${session.status}`}>
-            <Wifi size={11} />
-            {session.status}
-            {session.peers > 1 ? ` · ${session.peers}` : ''}
-          </span>
-        </div>
+        <span className={`chip status-${session.status}`}>
+          <Wifi size={11} />
+          {session.status}
+          {session.peers > 1 ? ` · ${session.peers}` : ''}
+        </span>
       </header>
 
       <div className="session-body">
         {session.error ? (
-          <p className="notice is-warning" style={{ margin: 'var(--sp-3)' }}>
+          <p className="notice is-warning" style={{ margin: 0 }}>
             <AlertTriangle size={12} />
             <span>{session.error}</span>
           </p>
         ) : null}
+        <RoomJoin />
         {/* -------------------------------------------------------- audio -- */}
         <div className="session-block">
           <h4>
@@ -233,6 +213,12 @@ export function SessionPanel() {
       </div>
     </section>
   )
+}
+
+function connectedLabel(status: string, room: string, peers: number): string {
+  if (status === 'online') return peers > 1 ? `${room} · ${peers} online` : `${room} · live`
+  if (status === 'connecting') return `${room} · connecting`
+  return room
 }
 
 function ShareTarget({
