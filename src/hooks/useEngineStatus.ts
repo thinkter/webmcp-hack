@@ -127,11 +127,22 @@ export function useAudioState() {
 }
 
 export function useMidiState() {
-  return useSyncExternalStore(
+  const state = useSyncExternalStore(
     (listener) => midiEngine.subscribe(listener),
-    () => ({ state: midiEngine.state, inputs: midiEngine.inputs, error: midiEngine.error }),
-    () => ({ state: 'idle' as const, inputs: [], error: null }),
+    () => midiEngine.state,
+    () => 'idle' as const,
   )
+  const error = useSyncExternalStore(
+    (listener) => midiEngine.subscribe(listener),
+    () => midiEngine.error,
+    () => null,
+  )
+  const inputs = useSyncExternalStore(
+    (listener) => midiEngine.subscribe(listener),
+    () => midiEngine.inputs,
+    () => [],
+  )
+  return { state, error, inputs }
 }
 
 export function useRemoteState() {
