@@ -40,9 +40,16 @@ export default {
       return stub.fetch(request)
     }
 
-    // Static assets fallback (SPA routing)
+    // Static assets fallback (SPA routing) with WebMCP Permissions-Policy header
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request)
+      const response = await env.ASSETS.fetch(request)
+      const newHeaders = new Headers(response.headers)
+      newHeaders.set('Permissions-Policy', 'tools=self')
+      return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: newHeaders,
+      })
     }
 
     return new Response('WebMCP Visual Yard Worker Running', { status: 200 })
