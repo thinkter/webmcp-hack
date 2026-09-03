@@ -1,4 +1,3087 @@
-:root{color:#eef2ed;background:#07090a;font-family:Inter,system-ui,sans-serif;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-width:320px;min-height:100vh;overflow:hidden}button,input,select{font:inherit}.app-shell{height:100vh;display:grid;grid-template-rows:72px 1fr;background:radial-gradient(circle at 65% -10%,#18221b 0,transparent 26%),#07090a}.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid #222725;background:#080a0be8}.brand,.status,.status span{display:flex;align-items:center}.brand{gap:12px}.mark{display:grid;place-items:center;width:36px;height:36px;color:#0b0d0c;background:#b9ff66;border-radius:4px;box-shadow:0 0 28px #b9ff6633}.eyebrow,.panel-heading span,.inspector-title span{display:block;color:#88918b;font:500 9px/1.2 monospace;letter-spacing:.16em}h1{margin:3px 0 0;font-size:16px}h1 em{margin-left:6px;color:#b9ff66;font:500 9px monospace}.status{gap:18px;color:#87908b;font:500 10px monospace;text-transform:uppercase}.status span{gap:7px}.status i{width:6px;height:6px;border-radius:50%;background:#b9ff66;box-shadow:0 0 10px #b9ff66}.workspace{min-height:0;display:grid;grid-template-columns:52px minmax(440px,1.15fr) minmax(380px,.85fr)}.rail{display:flex;align-items:center;flex-direction:column;gap:10px;padding-top:14px;border-right:1px solid #222725}.rail button{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:3px;background:transparent;color:#65706a;cursor:pointer}.rail button:hover,.rail button.active{color:#b9ff66;background:#b9ff6610}.rail>span{flex:1;width:1px;background:linear-gradient(#29302c,transparent)}.graph-panel,.output-panel{min-width:0;min-height:0;display:grid;border-right:1px solid #222725}.graph-panel{grid-template-rows:54px 1fr}.output-panel{grid-template-rows:54px minmax(260px,1.18fr) minmax(240px,.82fr)}.panel-heading{display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #222725;background:#0c0f10}.panel-heading strong{display:block;margin-top:5px;font:500 11px monospace;letter-spacing:.06em}.panel-heading button{display:flex;align-items:center;gap:6px;border:1px solid #303734;padding:7px 9px;border-radius:3px;background:#151918;color:#ddd;font:500 9px monospace;text-transform:uppercase;cursor:pointer}.resolution{color:#59625d!important}.graph-node{width:190px;border:1px solid #303734;border-radius:5px;background:#111514;box-shadow:0 12px 30px #0008;overflow:hidden}.graph-node.selected{border-color:#b9ff66;box-shadow:0 0 0 1px #b9ff6633,0 14px 36px #000b}.node-topline{display:flex;align-items:center;gap:7px;padding:9px 10px;color:#7e8882;background:#171b1a;border-bottom:1px solid #292f2c}.node-topline span{flex:1;font:500 9px monospace;letter-spacing:.1em;text-transform:uppercase}.graph-node>strong{display:block;padding:12px 11px 3px;font-size:13px}.node-meta{display:flex;justify-content:space-between;padding:7px 11px 11px;color:#747e78;font:9px monospace;text-transform:uppercase}.node-meta b{color:#b9ff66;font-weight:500}.react-flow__handle{width:9px;height:9px;border:2px solid #101312;background:#b9ff66}.react-flow__edge-path{stroke:#758276;stroke-width:1.5}.preview-wrap{position:relative;min-height:0;padding:14px;background:#090c0d}.preview-wrap canvas{width:100%;height:100%;display:block;border:1px solid #29302d;border-radius:3px;background:#030505}.preview-overlay{position:absolute;top:26px;left:27px;display:flex;gap:8px;align-items:center;font:9px monospace;text-transform:uppercase}.preview-overlay span{padding:4px 5px;color:#081007;background:#b9ff66}.preview-overlay b{font-weight:500}.gpu-error{position:absolute;inset:14px;display:grid;place-content:center;gap:8px;padding:30px;text-align:center;background:#0b0e0ef2}.gpu-error strong{color:#ff7a68;font:11px monospace}.gpu-error span{max-width:360px;color:#9ba49f;font-size:12px}.inspector{min-height:0;overflow:auto;padding:17px;border-top:1px solid #222725;background:#0c0f10}.inspector-title{display:flex;justify-content:space-between;margin-bottom:16px}.inspector-title strong{font:500 11px monospace}.inspector label{display:grid;gap:7px;margin:0 0 14px;color:#8b958f;font:10px monospace}.inspector label span{display:flex;justify-content:space-between}.inspector label b{color:#b9ff66}.inspector input:not([type=range],[type=checkbox]),.inspector select{width:100%;border:1px solid #2c322f;border-radius:3px;padding:9px;color:#e1e7e2;background:#121615}.inspector input[type=range]{width:100%;accent-color:#b9ff66}.toggle-row{display:flex!important;justify-content:space-between}.danger-button{display:flex;align-items:center;gap:7px;padding:8px 10px;border:1px solid #4a2b29;color:#d78177;background:#211313;font:9px monospace}.inspector.empty{display:grid;place-content:center;text-align:center;color:#6f7873}@media(max-width:900px){body{overflow:auto}.app-shell{height:auto;min-height:100vh}.status{display:none}.workspace{grid-template-columns:44px 1fr;grid-template-rows:620px 720px}.output-panel{grid-column:2}}
+/* ==========================================================================
+   Signal Yard — interface stylesheet
 
-/* Typed operator canvas */
-.panel-heading kbd{margin-left:5px;padding:2px 4px;border:1px solid #3a423e;border-radius:2px;color:#7f8a84;font:8px monospace}.graph-node{width:214px}.graph-node.family-chop{border-color:#31516d}.graph-node.family-chop.selected{border-color:#69b7ff;box-shadow:0 0 0 1px #69b7ff33,0 14px 36px #000b}.graph-node.bypassed{opacity:.5}.node-topline>i{padding:3px 5px;border-radius:2px;color:#0a0d0b;background:#b9ff66;font:700 8px monospace}.family-chop .node-topline>i,.family-chop i.family-chop{background:#69b7ff}.node-topline .node-menu{display:grid;place-items:center;width:22px;height:18px;border:0;color:#7e8882;background:transparent}.graph-node>p{overflow:hidden;margin:2px 11px 8px;color:#606a64;font:8px monospace;white-space:nowrap;text-overflow:ellipsis}.ports-list{display:grid;gap:4px;padding:0 11px 7px;color:#78837d;font:8px monospace}.ports-list span,.parameter-port span{display:flex;align-items:center;gap:5px}.dot{width:5px;height:5px;border-radius:50%;background:#b9ff66}.dot.number{background:#69b7ff}.parameter-port{position:relative;display:flex;justify-content:space-between;padding:6px 11px;border-top:1px solid #242a27;color:#839089;font:8px monospace}.parameter-port b{color:#69b7ff}.node-footer{display:flex;align-items:center;justify-content:space-between;padding:6px 8px 6px 11px;border-top:1px solid #292f2c;background:#0d100f;color:#657069;font:8px monospace}.node-footer>div{display:flex}.node-footer button{display:grid;place-items:center;width:24px;height:20px;border:0;color:#68736d;background:transparent;cursor:pointer}.node-footer button:hover{color:#e8eee9;background:#202622}.react-flow__handle.port-number{background:#69b7ff}.react-flow__edge.animated path{stroke-dasharray:5 5}.library-backdrop{position:fixed;z-index:100;inset:0;display:grid;place-items:start center;padding-top:9vh;background:#020404b8;backdrop-filter:blur(5px)}.node-library{width:min(880px,calc(100vw - 40px));max-height:80vh;display:grid;grid-template-rows:auto auto 1fr;border:1px solid #354039;border-radius:6px;background:#0b0e0d;box-shadow:0 30px 100px #000;overflow:hidden}.node-library>header{display:flex;justify-content:space-between;align-items:center;padding:17px 19px;border-bottom:1px solid #29302d}.node-library>header span{display:block;color:#7b8780;font:8px monospace;letter-spacing:.14em}.node-library>header strong{display:block;margin-top:5px;font-size:17px}.node-library>header button{border:0;color:#89938d;background:transparent}.library-search{display:flex;align-items:center;gap:10px;margin:14px 16px;padding:10px 12px;border:1px solid #303834;border-radius:4px;background:#111513}.library-search:focus-within{border-color:#b9ff66}.library-search input{flex:1;border:0;outline:0;color:#eef2ed;background:transparent}.library-search kbd{color:#6d7771;font:8px monospace}.library-results{overflow:auto;padding:0 16px 18px}.library-category h3{display:flex;gap:8px;align-items:center;margin:16px 0 8px;color:#89938d;font:9px monospace;text-transform:uppercase;letter-spacing:.12em}.library-category h3 span{color:#505953}.library-category>div{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.library-category button{display:grid;grid-template-columns:34px 1fr 18px;gap:9px;align-items:center;padding:10px;border:1px solid #282f2c;border-radius:4px;text-align:left;color:#dce3de;background:#111513;cursor:pointer}.library-category button:hover{border-color:#b9ff66;background:#151b17}.library-category button>i{display:grid;place-items:center;width:31px;height:25px;border-radius:2px;color:#09100a;background:#b9ff66;font:700 8px monospace}.library-category button span strong,.library-category button span small{display:block}.library-category button span strong{font-size:11px}.library-category button span small{overflow:hidden;margin-top:4px;color:#68736d;font:8px monospace;white-space:nowrap;text-overflow:ellipsis}.library-category button em{color:#637069;font-style:normal}@media(max-width:700px){.library-category>div{grid-template-columns:1fr 1fr}}
+   A live-performance instrument, not a dashboard. Everything here is tuned for
+   a dark room, a metre of viewing distance, and glances rather than reading.
+
+   Two colours carry meaning and nothing else does:
+     --top   acid green-yellow  →  TOP / texture signal
+     --chop  cool blue          →  CHOP / numeric signal
+   Amber warns, desaturated red means broken. No other hues are introduced.
+
+   Section order follows the UI top to bottom:
+     tokens · reset · shell · topbar · toolbar · canvas + react-flow · nodes ·
+     monitor · panels · inspector · params · browser · history · session ·
+     scrollbars · responsive · motion
+   ========================================================================== */
+
+/* ==========================================================================
+   1. TOKENS
+   ========================================================================== */
+
+:root {
+  /* -- surfaces ---------------------------------------------------------
+     Four levels, each a small step. Depth is read from these steps plus
+     hairlines; there are no drop shadows in the chrome, because shadows at
+     this density turn into fog. --inset is the only level *below* the panel
+     and is reserved for wells: inputs, code, thumbnails, meter tracks. */
+  --void: #050607;
+  --panel: #0b0d0e;
+  --raise: #121516;
+  --float: #1a1f20;
+  --inset: #08090a;
+
+  /* -- hairlines --------------------------------------------------------
+     Borders do the structural work, so they are deliberately near-invisible
+     in isolation and only legible as edges between two surfaces. */
+  --line-soft: #16191a;
+  --line: #1f2426;
+  --line-hard: #2c3335;
+
+  /* -- ink --------------------------------------------------------------- */
+  --ink: #e7ecea;
+  --ink-2: #99a29e;
+  --ink-3: #646d69;
+  --ink-4: #3f4644;
+
+  /* -- signals ----------------------------------------------------------
+     These two hex values are duplicated in App.tsx for the minimap node
+     colours; keep them in sync if either changes. */
+  --top: #b9ff66;
+  --chop: #69b7ff;
+  --top-dim: #7ba844;
+  --chop-dim: #4b7ba6;
+  --top-wash: rgba(185, 255, 102, 0.1);
+  --chop-wash: rgba(105, 183, 255, 0.11);
+  --top-edge: rgba(185, 255, 102, 0.34);
+  --chop-edge: rgba(105, 183, 255, 0.36);
+
+  /* -- states ------------------------------------------------------------ */
+  --warn: #ffb43c;
+  --warn-wash: rgba(255, 180, 60, 0.1);
+  --error: #dd6a5e;
+  --error-wash: rgba(221, 106, 94, 0.11);
+
+  /* -- type -------------------------------------------------------------- */
+  --ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo,
+    Consolas, monospace;
+  --t-micro: 9px;
+  --t-tiny: 10px;
+  --t-small: 11px;
+  --t-body: 12px;
+  --t-lead: 13px;
+  /* Uppercase micro-labels only read at 9px if the letters are pushed apart.
+     Small + tracked is the whole trick behind dense-but-legible tooling UI. */
+  --track: 0.15em;
+
+  /* -- geometry ---------------------------------------------------------- */
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 7px;
+  --sp-1: 4px;
+  --sp-2: 6px;
+  --sp-3: 10px;
+  --sp-4: 14px;
+  --sp-5: 20px;
+
+  --topbar-h: 50px;
+  --toolbar-h: 38px;
+  --head-h: 42px;
+  --tabs-h: 30px;
+  --side-w: 396px;
+  --ctl-h: 24px;
+  --node-w: 200px;
+  /* The number box column in .param-number. Every numeric row shares it, and
+     that shared right edge is what makes a long parameter list feel built. */
+  --numbox-w: 62px;
+
+  /* -- motion -----------------------------------------------------------
+     Nothing above 140ms. Perceived latency is part of playing an instrument. */
+  --fast: 80ms;
+  --med: 130ms;
+
+  color-scheme: dark;
+  color: var(--ink);
+  background: var(--void);
+  font-family: var(--ui);
+  font-size: var(--t-body);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================================================================
+   2. RESET
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  overflow: hidden;
+  background: var(--void);
+}
+
+h1,
+h3,
+h4,
+p,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+svg {
+  flex: none;
+  display: block;
+}
+
+code,
+kbd,
+time {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keyboard focus is a first-class state: this tool is driven by Tab, arrows and
+   Enter as much as by the mouse. Zero specificity so component rules can change
+   the ring colour without having to re-declare the ring itself. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 1px solid var(--top);
+  outline-offset: 1px;
+  border-radius: var(--r-1);
+}
+
+::selection {
+  background: var(--top-edge);
+  color: var(--ink);
+}
+
+kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  border: 1px solid var(--line-hard);
+  border-bottom-width: 2px;
+  border-radius: var(--r-1);
+  background: var(--raise);
+  color: var(--ink-3);
+  font-size: var(--t-micro);
+  line-height: 1.4;
+}
+
+.muted {
+  color: var(--ink-3);
+  font-size: var(--t-small);
+  line-height: 1.55;
+}
+
+.small {
+  font-size: var(--t-tiny);
+}
+
+/* ==========================================================================
+   3. SHELL
+   ========================================================================== */
+
+.shell {
+  height: 100dvh;
+  display: grid;
+  /* Fixed chrome, elastic middle. minmax(0,1fr) rather than 1fr so the
+     workspace can actually shrink and hand scrolling to its own children. */
+  grid-template-rows: var(--topbar-h) var(--toolbar-h) minmax(0, 1fr);
+  background: var(--void);
+}
+
+.workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--side-w);
+}
+
+/* ==========================================================================
+   4. TOPBAR
+   ========================================================================== */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  padding: 0 var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-2);
+  background: var(--top);
+  color: #07100a;
+}
+
+.eyebrow {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  line-height: 1;
+}
+
+.topbar h1 {
+  margin-top: 3px;
+  font-size: var(--t-lead);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+}
+
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* -- chips ----------------------------------------------------------------
+   One component for every status readout in the app. Colour is applied to the
+   chip as a whole via `color`, so the dot, the icon and the label all shift
+   together and a single rule per state is enough. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 22px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.chip i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.chip.is-good,
+.chip.state-running,
+.chip.status-online {
+  border-color: var(--top-edge);
+  background: var(--top-wash);
+  color: var(--top);
+}
+
+.chip.state-starting,
+.chip.status-connecting {
+  border-color: rgba(255, 180, 60, 0.3);
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.chip.state-error,
+.chip.status-error {
+  border-color: rgba(221, 106, 94, 0.34);
+  background: var(--error-wash);
+  color: var(--error);
+}
+
+.chip.state-idle,
+.chip.status-solo {
+  color: var(--ink-3);
+}
+
+/* ==========================================================================
+   5. TOOLBAR
+   ========================================================================== */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  min-width: 0;
+}
+
+.toolbar-name {
+  width: 168px;
+  height: var(--ctl-h);
+  padding: 0 var(--sp-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-2);
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--t-body);
+  font-weight: 600;
+}
+
+.toolbar-name:hover {
+  border-color: var(--line);
+  background: var(--raise);
+}
+
+.toolbar-name:focus {
+  border-color: var(--line-hard);
+  background: var(--inset);
+  outline: none;
+}
+
+.toolbar-name:focus-visible {
+  outline: 1px solid var(--top);
+}
+
+/* Grouped buttons read as one control: shared shell, hairline dividers. */
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+}
+
+.toolbar-group button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 22px;
+  min-width: 24px;
+  padding: 0 var(--sp-2);
+  justify-content: center;
+  border: 0;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  transition: background var(--fast) linear, color var(--fast) linear;
+}
+
+.toolbar-group button:hover:not(:disabled) {
+  background: var(--float);
+  color: var(--ink);
+}
+
+.toolbar-group button:disabled {
+  color: var(--ink-4);
+}
+
+.toolbar-group button.primary {
+  background: var(--top);
+  color: #07100a;
+  font-weight: 600;
+  padding: 0 var(--sp-2) 0 var(--sp-2);
+}
+
+.toolbar-group button.primary:hover:not(:disabled) {
+  background: #cdff85;
+  color: #07100a;
+}
+
+.toolbar-group button.primary kbd {
+  border-color: rgba(0, 0, 0, 0.28);
+  background: rgba(0, 0, 0, 0.16);
+  color: #12200f;
+}
+
+.toolbar-group button.is-active {
+  background: var(--top-wash);
+  color: var(--top);
+}
+
+.toolbar-group select {
+  height: 22px;
+  border: 0;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  padding: 0 18px 0 var(--sp-2);
+}
+
+.toolbar-group select:hover {
+  background: var(--float);
+  color: var(--ink);
+}
+
+.transport .live,
+.transport .paused {
+  padding: 0 var(--sp-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+}
+
+/* LIVE is the only signal-coloured word in the toolbar. HELD is deliberately
+   neutral rather than amber: pausing is a choice, not a fault. */
+.transport .live {
+  color: var(--top);
+}
+
+.transport .paused {
+  color: var(--ink-3);
+}
+
+.toolbar-spacer {
+  flex: 1 1 auto;
+}
+
+.toolbar-stats {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.toolbar-stats b {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   6. CANVAS + REACT FLOW
+   ========================================================================== */
+
+.canvas-panel {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+  background: var(--void);
+}
+
+/* React Flow v12 themes itself from --xy-* custom properties, so almost all of
+   these overrides are variable assignments rather than selector fights. */
+.canvas-panel .react-flow {
+  --xy-edge-stroke: #6a7a74;
+  --xy-edge-stroke-selected: var(--top);
+  --xy-edge-stroke-width: 1.5;
+  --xy-connectionline-stroke: var(--chop);
+  --xy-connectionline-stroke-width: 1.4;
+  --xy-handle-background-color: var(--top);
+  --xy-handle-border-color: var(--void);
+  --xy-minimap-background-color: rgba(8, 10, 11, 0.9);
+  --xy-minimap-mask-background-color: rgba(4, 6, 7, 0.72);
+  --xy-minimap-node-stroke-width: 2;
+  --xy-controls-button-background-color: var(--raise);
+  --xy-controls-button-background-color-hover: var(--float);
+  --xy-controls-button-color: var(--ink-2);
+  --xy-controls-button-color-hover: var(--ink);
+  --xy-controls-button-border-color: var(--line);
+  --xy-controls-box-shadow: none;
+  --xy-attribution-background-color: rgba(8, 10, 11, 0.7);
+  --xy-selection-background-color: var(--top-wash);
+  --xy-selection-border: 1px dashed var(--top-edge);
+  background: var(--void);
+}
+
+/* The node wrapper must stay transparent: the .node article draws everything.
+   Overflow stays visible so absolutely-positioned ports can hang off the card. */
+.react-flow__node {
+  border: 0;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  font-family: var(--ui);
+  font-size: var(--t-small);
+  color: var(--ink);
+}
+
+.react-flow__node:focus-visible {
+  outline: 1px solid var(--top);
+  outline-offset: 3px;
+}
+
+/* Edges: the animated dash is the one motion in the app that carries
+   information — it shows which way signal is actually flowing. */
+.react-flow__edge-path {
+  stroke-linecap: round;
+}
+
+.react-flow__edge.animated path {
+  stroke-dasharray: 4 4;
+  animation-duration: 0.6s;
+}
+
+.react-flow__edge:hover .react-flow__edge-path {
+  stroke: var(--ink-2);
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__connection-path {
+  stroke-linecap: round;
+  stroke-dasharray: 3 5;
+}
+
+/* -- ports --------------------------------------------------------------
+   Type is encoded twice: hue *and* shape. A texture port is a filled square,
+   a signal port is a filled circle, so the core mental model survives any
+   form of colour blindness. Vertical placement comes from an inline `top`
+   set by OperatorNode, so nothing here may set `top`. */
+.react-flow__handle.port {
+  width: 9px;
+  height: 9px;
+  border: 1px solid var(--void);
+  z-index: 2;
+  transition: box-shadow var(--fast) linear, transform var(--fast) linear;
+}
+
+.react-flow__handle.port-texture {
+  border-radius: 1px;
+  background: var(--top);
+}
+
+.react-flow__handle.port-number {
+  border-radius: 50%;
+  background: var(--chop);
+}
+
+/* A delayed input reads the previous frame. Hollow = "not this frame". */
+.react-flow__handle.port-delayed {
+  background: var(--void);
+  border: 2px solid var(--top);
+}
+
+.react-flow__handle.port-param {
+  width: 7px;
+  height: 7px;
+}
+
+.react-flow__handle.port:hover,
+.react-flow__handle.port.connectingfrom,
+.react-flow__handle.port.connectingto {
+  box-shadow: 0 0 0 3px var(--chop-wash);
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.react-flow__handle-right.port:hover,
+.react-flow__handle-right.port.connectingfrom,
+.react-flow__handle-right.port.connectingto {
+  transform: translate(50%, -50%) scale(1.25);
+}
+
+.react-flow__handle.port-texture:hover,
+.react-flow__handle.port-texture.connectingfrom {
+  box-shadow: 0 0 0 3px var(--top-wash);
+}
+
+/* -- panels: controls, minimap, attribution ---------------------------- */
+.react-flow__controls {
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: none;
+}
+
+.react-flow__controls-button {
+  width: 22px;
+  height: 22px;
+  padding: 5px;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor;
+  max-width: 11px;
+  max-height: 11px;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+
+.react-flow__minimap {
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  overflow: hidden;
+}
+
+.react-flow__minimap-node {
+  /* Node fill colour is supplied per-node from App.tsx (TOP green / CHOP
+     blue), so the minimap carries the same two-colour code as the canvas. */
+  rx: 2;
+}
+
+/* Hidden by proOptions in this app; styled so it never flashes white if the
+   flag is ever removed. */
+.react-flow__attribution {
+  border-radius: var(--r-1) 0 0 0;
+  color: var(--ink-4);
+  font-family: var(--mono);
+  font-size: 8px;
+}
+
+.react-flow__attribution a {
+  color: inherit;
+}
+
+/* selectionOnDrag is enabled, so the marquee is a visible, frequent element. */
+.react-flow__selection {
+  background: var(--top-wash);
+  border: 1px dashed var(--top-edge);
+}
+
+/* -- remote presence cursors --------------------------------------------
+   ViewportPortal places these in flow coordinates, already transformed with
+   pan/zoom. They must never take pointer events or they would steal the
+   local cursor's own stream. The 50ms lerp is just enough to hide the 15 Hz
+   publish cadence without reading as lag. */
+.remote-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 1000;
+  will-change: transform;
+  transition: transform 0.05s linear;
+}
+
+.remote-cursor-pointer {
+  display: block;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
+}
+
+.remote-cursor-label {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  font-size: var(--t-tiny);
+  font-weight: 600;
+  font-family: var(--mono);
+  color: #0b0e14;
+  padding: 2px 6px;
+  border-radius: var(--r-2);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   7. NODES
+   ========================================================================== */
+
+/* --accent is the node's family colour, inherited by the badge, the ports
+   list, the selection ring and the signal meter. Setting it once here is what
+   keeps TOP/CHOP consistent without repeating either hex value. */
+.node {
+  --accent: var(--top);
+  --accent-wash: var(--top-wash);
+  --accent-edge: var(--top-edge);
+
+  position: relative;
+  width: var(--node-w);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-3);
+  background: var(--raise);
+  transition: border-color var(--fast) linear, box-shadow var(--fast) linear,
+    opacity var(--fast) linear;
+}
+
+/* Stated rather than inherited from .node, so the family/colour pairing is
+   readable in one place instead of implied by a default. */
+.node-top {
+  --accent: var(--top);
+  --accent-wash: var(--top-wash);
+  --accent-edge: var(--top-edge);
+}
+
+.node-chop {
+  --accent: var(--chop);
+  --accent-wash: var(--chop-wash);
+  --accent-edge: var(--chop-edge);
+}
+
+/* -- head ---------------------------------------------------------------- */
+.node-head {
+  display: grid;
+  /* badge | name | tools. The tools column collapses to 0 until hover so the
+     name gets the full width at rest, which is what you read from a metre. */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 30px;
+  padding: 0 var(--sp-2) 0 var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--r-3) var(--r-3) 0 0;
+  background: var(--float);
+}
+
+.node-family {
+  padding: 2px 4px;
+  border-radius: var(--r-1);
+  background: var(--accent);
+  color: #07100a;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.node-name {
+  overflow: hidden;
+  font-size: var(--t-small);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.node-tools {
+  display: flex;
+  gap: 1px;
+  opacity: 0;
+  transition: opacity var(--fast) linear;
+}
+
+.node:hover .node-tools,
+.node-tools:focus-within {
+  opacity: 1;
+}
+
+.node-tools button {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--ink-3);
+}
+
+.node-tools button:hover {
+  background: var(--raise);
+  color: var(--ink);
+}
+
+/* -- thumbnail -----------------------------------------------------------
+   16:9 well. The engine sizes the canvas backing store from clientWidth ×
+   DPR, so the canvas must have a definite CSS box and fill it exactly —
+   any gap here becomes a blurry or mis-scaled frame. */
+.node-thumb {
+  position: relative;
+  z-index: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: var(--inset);
+  /* Faint checker so transparent output is readable as transparent rather
+     than as black. 8px cells, barely above the noise floor. */
+  background-image: linear-gradient(45deg, #0d1011 25%, transparent 25%),
+    linear-gradient(-45deg, #0d1011 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #0d1011 75%),
+    linear-gradient(-45deg, transparent 75%, #0d1011 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+}
+
+.node-thumb canvas,
+.node-thumb-idle {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.node-thumb-idle {
+  background: linear-gradient(var(--inset), #0a0c0d);
+}
+
+.node-thumb-badge {
+  position: absolute;
+  top: var(--sp-1);
+  left: var(--sp-1);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 4px;
+  border-radius: var(--r-1);
+  background: rgba(5, 6, 7, 0.82);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Two badges can stack (OFF + BYPASS); the second sits under the first. */
+.node-thumb-badge + .node-thumb-badge {
+  top: 20px;
+}
+
+.node-thumb-live {
+  color: var(--top);
+}
+
+.node-thumb-error {
+  color: var(--error);
+}
+
+/* -- signal meter (CHOP nodes stand in for the thumbnail) ---------------- */
+.node-signal {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.node-signal-track {
+  position: relative;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--inset);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.node-signal-fill {
+  height: 100%;
+  background: var(--chop);
+}
+
+.node-signal-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.node-signal b {
+  color: var(--chop);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- parameter ports ----------------------------------------------------
+   Each row is its own positioning context so the React Flow handle inside it
+   lands on the card's left edge at that row's height, with no inline `top`. */
+.node-params {
+  border-top: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.node-params li {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 3px var(--sp-3);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.node-params li span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.node-params li b {
+  color: var(--ink-2);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.node-params li.is-wired {
+  background: var(--chop-wash);
+  color: var(--chop);
+}
+
+.node-params li.is-wired b {
+  color: var(--chop);
+}
+
+/* -- foot ---------------------------------------------------------------- */
+.node-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  min-height: 20px;
+  padding: 3px var(--sp-3);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--r-3) var(--r-3);
+  background: var(--panel);
+}
+
+.node-category {
+  overflow: hidden;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.node-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.node-status.is-error {
+  color: var(--error);
+}
+
+.node-status.is-warning {
+  color: var(--warn);
+}
+
+.node-status.is-live {
+  color: var(--top);
+}
+
+/* -- node states ---------------------------------------------------------
+   Ordered weakest to strongest so the more urgent state wins the border. */
+.node.is-disabled {
+  opacity: 0.42;
+}
+
+.node.is-bypassed .node-thumb,
+.node.is-bypassed .node-signal {
+  opacity: 0.35;
+}
+
+.node.is-bypassed .node-head {
+  /* Diagonal hatch: the universal "routed around" mark in signal tools. */
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 5px,
+    rgba(255, 255, 255, 0.045) 5px 10px
+  );
+}
+
+.node.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-edge);
+}
+
+.node.has-error {
+  border-color: rgba(221, 106, 94, 0.6);
+  /* A border alone is too quiet against a dark card at viewing distance, so a
+   faint halo carries the state the extra metre. */
+  box-shadow: 0 0 0 3px rgba(221, 106, 94, 0.07);
+}
+
+.node.has-error.is-selected {
+  box-shadow: 0 0 0 1px rgba(221, 106, 94, 0.4);
+}
+
+/* Shown while a CHOP wire is in flight: every modulatable parameter on this
+   card is now a drop target, so the whole card has to say "aim here". */
+.node.is-modulation-target {
+  border-color: var(--chop);
+  border-style: dashed;
+  box-shadow: 0 0 0 4px var(--chop-wash);
+}
+
+.node.is-modulation-target .node-params li {
+  color: var(--chop);
+}
+
+/* Category classes are authoring hooks. Only the two that change how a node
+   should be *read* are styled: sources start a chain, outputs end one. The
+   remaining six are intentionally unstyled — the footer already names the
+   category in words, and six more colours would break the two-signal rule. */
+.node.node-source .node-head {
+  box-shadow: inset 2px 0 0 var(--accent-edge);
+}
+
+.node.node-output {
+  border-color: var(--line-hard);
+}
+
+.node.node-output .node-head {
+  background: var(--accent-wash);
+}
+
+.node.node-output .node-family {
+  background: transparent;
+  border: 1px solid var(--accent-edge);
+  color: var(--accent);
+}
+
+/* -- unknown operator ---------------------------------------------------- */
+.node-missing {
+  --accent: var(--error);
+  padding: var(--sp-3);
+  border-color: rgba(221, 106, 94, 0.45);
+  background: var(--error-wash);
+}
+
+.node-missing strong {
+  display: block;
+  font-size: var(--t-small);
+  color: var(--error);
+}
+
+.node-missing p {
+  margin-top: var(--sp-1);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+}
+
+/* ==========================================================================
+   8. MONITOR
+   ========================================================================== */
+
+.monitor {
+  display: grid;
+  grid-template-rows: auto auto;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.monitor-head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.monitor-head-actions button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+}
+
+.monitor-head-actions button:hover {
+  background: var(--float);
+  color: var(--ink);
+}
+
+/* aspect-ratio arrives inline from the patch resolution, so this box only
+   supplies the width and the well it sits in. */
+.monitor-surface {
+  position: relative;
+  width: 100%;
+  background: #000;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.monitor-surface canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.monitor-surface:fullscreen {
+  aspect-ratio: auto !important; /* the inline ratio would letterbox twice */
+  height: 100%;
+  cursor: none;
+}
+
+/* Overlays sit over arbitrary video, so they carry their own scrim rather
+   than relying on the footage being dark. */
+.monitor-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  text-align: center;
+  background: rgba(5, 6, 7, 0.78);
+  backdrop-filter: blur(6px);
+  color: var(--ink-2);
+}
+
+.monitor-overlay strong {
+  font-size: var(--t-body);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.monitor-overlay p {
+  max-width: 34ch;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  line-height: 1.5;
+}
+
+.monitor-overlay small {
+  max-width: 40ch;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+}
+
+.monitor-overlay button {
+  margin-top: var(--sp-1);
+  height: var(--ctl-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink);
+  font-size: var(--t-small);
+}
+
+.monitor-overlay button:hover {
+  background: var(--float);
+}
+
+.monitor-overlay.is-error {
+  color: var(--error);
+}
+
+.monitor-overlay.is-error strong {
+  color: var(--error);
+}
+
+.monitor-overlay.is-warning {
+  color: var(--warn);
+}
+
+.monitor-overlay.is-warning strong {
+  color: var(--warn);
+}
+
+/* ==========================================================================
+   9. PANELS (side column, tabs, shared panel head, notices)
+   ========================================================================== */
+
+.side {
+  display: grid;
+  /* monitor | tabs | body. The body is the only elastic row and owns all
+     scrolling, so the monitor never gets squeezed out of aspect. */
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  background: var(--panel);
+}
+
+.side-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--line);
+  background: var(--void);
+}
+
+.side-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  height: var(--tabs-h);
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  transition: color var(--fast) linear, background var(--fast) linear;
+}
+
+.side-tabs button:hover {
+  color: var(--ink-2);
+  background: var(--raise);
+}
+
+.side-tabs button.is-active {
+  color: var(--ink);
+  background: var(--panel);
+  border-bottom-color: var(--top);
+}
+
+.side-panel {
+  display: grid;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Every panel in the side column is a fixed head over a scrolling body. */
+.inspector,
+.history,
+.session {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+}
+
+.history {
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  min-height: var(--head-h);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.panel-head > div {
+  min-width: 0;
+}
+
+.panel-head span {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.panel-head strong {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: var(--t-body);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* The head's own chip should not inherit the head's uppercase span rule. */
+.panel-head .chip {
+  display: inline-flex;
+}
+
+.panel-head .chip svg {
+  display: block;
+}
+
+.btn-session {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--float);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.btn-session:hover {
+  background: #22282a;
+  color: var(--ink);
+}
+
+.btn-session.is-active {
+  border-color: var(--top-edge);
+  background: var(--top-wash);
+  color: var(--top);
+}
+
+/* -- notices ------------------------------------------------------------
+   Inline problem reports. Shared by the inspector and the session panel. */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-left-width: 2px;
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  line-height: 1.5;
+}
+
+.notice strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--ink);
+  font-size: var(--t-small);
+}
+
+.notice p {
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  line-height: 1.55;
+}
+
+.notice p b {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.notice small {
+  display: block;
+  margin-top: var(--sp-1);
+  color: var(--ink-3);
+  font-size: var(--t-micro);
+}
+
+.notice code {
+  color: var(--ink);
+  font-size: var(--t-tiny);
+}
+
+.notice.is-error {
+  border-color: rgba(221, 106, 94, 0.28);
+  border-left-color: var(--error);
+  background: var(--error-wash);
+  color: var(--error);
+}
+
+.notice.is-warning {
+  border-color: rgba(255, 180, 60, 0.24);
+  border-left-color: var(--warn);
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.notice.is-info {
+  border-left-color: var(--chop);
+  background: var(--chop-wash);
+  color: var(--chop);
+}
+
+/* ==========================================================================
+   10. INSPECTOR
+   ========================================================================== */
+
+.inspector-name {
+  display: block;
+  width: 100%;
+  margin-top: 2px;
+  padding: 1px 3px;
+  margin-left: -3px;
+  border: 1px solid transparent;
+  border-radius: var(--r-1);
+  background: transparent;
+  font-size: var(--t-body);
+  font-weight: 600;
+}
+
+.inspector-name:hover {
+  border-color: var(--line);
+  background: var(--raise);
+}
+
+.inspector-name:focus {
+  border-color: var(--line-hard);
+  background: var(--inset);
+  outline: none;
+}
+
+.inspector-name:focus-visible {
+  outline: 1px solid var(--top);
+}
+
+.inspector-actions {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.inspector-actions button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+  transition: background var(--fast) linear, color var(--fast) linear;
+}
+
+.inspector-actions button:hover {
+  background: var(--float);
+  color: var(--ink);
+}
+
+.inspector-actions button.is-active {
+  border-color: var(--warn);
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.inspector-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+  padding: var(--sp-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.inspector.is-empty .inspector-body {
+  align-content: center;
+  justify-items: center;
+  display: grid;
+  text-align: center;
+}
+
+.inspector-description {
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  line-height: 1.55;
+}
+
+.inspector-description em {
+  display: block;
+  margin-top: var(--sp-1);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Full-width action button (screen capture picker). */
+.inspector-body button.wide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  height: 28px;
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink);
+  font-size: var(--t-small);
+}
+
+.inspector-body button.wide:hover {
+  background: var(--float);
+}
+
+.inspector-body button.danger,
+.inspector-actions button.danger:hover {
+  border-color: rgba(221, 106, 94, 0.35);
+  background: var(--error-wash);
+  color: var(--error);
+}
+
+.inspector-body button.danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  width: 100%;
+  height: 28px;
+  border-radius: var(--r-2);
+  font-size: var(--t-small);
+}
+
+/* -- page tabs ----------------------------------------------------------- */
+.inspector-pages {
+  display: flex;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--inset);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.inspector-pages::-webkit-scrollbar {
+  display: none;
+}
+
+.inspector-pages button {
+  flex: 1 0 auto;
+  height: 22px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.inspector-pages button:hover {
+  color: var(--ink-2);
+}
+
+.inspector-pages button.is-active {
+  background: var(--float);
+  color: var(--ink);
+}
+
+/* -- link inspector ------------------------------------------------------ */
+.link-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+}
+
+.link-route span {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+}
+
+.link-route strong {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  font-size: var(--t-small);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.link-route small {
+  display: block;
+  margin-top: 2px;
+  color: var(--chop);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+}
+
+.link-route > b {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+/* -- notes --------------------------------------------------------------- */
+.inspector-comment {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.inspector-comment span {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   11. PARAMS
+   ========================================================================== */
+
+/* -- native control primitives -------------------------------------------
+   Scoped to the inspector so the toolbar's own compact selects are untouched.
+   The browser defaults for range/color/checkbox are unusable at this density,
+   so all three are rebuilt from scratch below. */
+
+.inspector-body :is(input[type="text"], input[type="number"], textarea, select) {
+  width: 100%;
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  /* background-color, not the shorthand: the select caret below is a
+     background-image on a lower-specificity selector and the shorthand
+     would reset it to none. */
+  background-color: var(--inset);
+  color: var(--ink);
+  font-size: var(--t-small);
+  transition: border-color var(--fast) linear;
+}
+
+.inspector-body :is(input[type="text"], input[type="number"], select) {
+  height: var(--ctl-h);
+  padding: 0 var(--sp-2);
+}
+
+.inspector-body textarea {
+  padding: var(--sp-2);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.inspector-body
+  :is(input[type="text"], input[type="number"], textarea, select):hover:not(:disabled) {
+  border-color: #3a4244;
+}
+
+.inspector-body
+  :is(input[type="text"], input[type="number"], textarea, select):focus {
+  border-color: var(--top-dim);
+  outline: none;
+}
+
+.inspector-body
+  :is(input[type="text"], input[type="number"], textarea, select):focus-visible {
+  outline: 1px solid var(--top);
+  outline-offset: 0;
+}
+
+.inspector-body :is(input, textarea, select):disabled {
+  color: var(--ink-4);
+  border-color: var(--line);
+  background-color: #070809;
+}
+
+/* Spinners steal width from a 62px box and are redundant next to a slider. */
+.inspector-body input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.inspector-body input[type="number"]::-webkit-outer-spin-button,
+.inspector-body input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Custom caret; the native one cannot be recoloured for a dark surface. */
+.inspector-body select,
+.session select,
+.history-revert select,
+.toolbar-group select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6' viewBox='0 0 9 6'%3E%3Cpath d='M1 1l3.5 3.5L8 1' fill='none' stroke='%23929c97' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--sp-2) center;
+  padding-right: 22px;
+}
+
+.inspector-body option,
+.session option,
+.history-revert option,
+.toolbar-group option {
+  background: var(--float);
+  color: var(--ink);
+}
+
+/* -- range ----------------------------------------------------------------
+   A 3px track with a tall thin thumb: reads as a fader, and the narrow thumb
+   makes the exact value position legible at a glance across a long list. */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  cursor: ew-resize;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--inset);
+  box-shadow: inset 0 0 0 1px var(--line-hard);
+}
+
+input[type="range"]::-moz-range-track {
+  height: 3px;
+  border-radius: 2px;
+  background: var(--inset);
+  box-shadow: inset 0 0 0 1px var(--line-hard);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 14px;
+  margin-top: -5.5px;
+  border: 1px solid var(--void);
+  border-radius: 2px;
+  background: var(--ink-2);
+  transition: background var(--fast) linear;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 8px;
+  height: 14px;
+  border: 1px solid var(--void);
+  border-radius: 2px;
+  background: var(--ink-2);
+}
+
+input[type="range"]:hover::-webkit-slider-thumb,
+input[type="range"]:active::-webkit-slider-thumb {
+  background: var(--top);
+}
+
+input[type="range"]:hover::-moz-range-thumb,
+input[type="range"]:active::-moz-range-thumb {
+  background: var(--top);
+}
+
+input[type="range"]:disabled {
+  cursor: default;
+}
+
+input[type="range"]:disabled::-webkit-slider-thumb {
+  background: var(--ink-4);
+}
+
+input[type="range"]:disabled::-moz-range-thumb {
+  background: var(--ink-4);
+}
+
+/* -- the parameter row ---------------------------------------------------
+   Rows are full-bleed inside a bordered list so the hairline separators run
+   edge to edge; that continuous rule is most of what makes a long list scan. */
+.param-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.param {
+  display: grid;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.param + .param {
+  border-top: 1px solid var(--line-soft);
+}
+
+.param-head {
+  display: grid;
+  /* label | live value. auto on the right pins every readout to one column
+     edge, which is what stops the list looking ragged while values change. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.param-head label {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.param-head label em {
+  margin-left: 4px;
+  color: var(--ink-4);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-style: normal;
+}
+
+.param-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* Values change at frame rate, so tabular figures are mandatory: without them
+   the digits jitter horizontally and the whole panel appears to vibrate. */
+.param-value {
+  /* Long text and WGSL params format to something far wider than a number;
+     clamping keeps the readout column honest without truncating a colour
+     tuple, which is the widest legitimate value. */
+  max-width: 26ch;
+  overflow: hidden;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.param-reset {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--ink-4);
+}
+
+.param-reset:hover {
+  background: var(--float);
+  color: var(--ink-2);
+}
+
+.param-help {
+  color: var(--ink-3);
+  font-size: var(--t-tiny);
+  line-height: 1.5;
+}
+
+/* -- driven by a signal ---------------------------------------------------
+   The single most important state in the inspector: the control is dead and
+   a CHOP owns the value. Signalled three ways at once (inset blue bar, blue
+   wash, blue live number) so it registers while scrolling past. */
+.param-driven {
+  background: var(--chop-wash);
+  box-shadow: inset 2px 0 0 var(--chop);
+}
+
+/* The control is not the user's to touch while a signal owns it, so it drops
+   back hard and the blue live readout becomes the row's subject. */
+.param-driven .param-number,
+.param-driven .param-color,
+.param-driven .param-switch,
+.param-driven > select {
+  opacity: 0.38;
+}
+
+.param-driver {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 16px;
+  padding: 0 4px;
+  border: 1px solid var(--chop-edge);
+  border-radius: var(--r-1);
+  background: rgba(105, 183, 255, 0.08);
+  color: var(--chop);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+}
+
+.param-driver:hover {
+  border-color: var(--chop);
+  background: rgba(105, 183, 255, 0.16);
+}
+
+/* System parameters are engine-written (camera aspect and similar). The
+   inspector filters them out today; styled so they read as read-only if the
+   filter is ever relaxed. */
+.param-system {
+  opacity: 0.55;
+}
+
+/* -- number: slider + box ------------------------------------------------
+   The shared --numbox-w column is why the boxes line up down the whole list. */
+.param-number {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--numbox-w);
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.param-numeric {
+  text-align: right;
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+}
+
+/* -- colour --------------------------------------------------------------- */
+.param-color {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.param-color input[type="color"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--ctl-h);
+  padding: 0;
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--inset);
+  cursor: pointer;
+}
+
+.param-color input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.param-color input[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: 1px;
+}
+
+.param-color input[type="color"]::-moz-color-swatch {
+  border: 0;
+  border-radius: 1px;
+}
+
+/* -- switch ---------------------------------------------------------------
+   The checkbox stays in the accessibility tree and keeps focus; only its
+   painting is replaced, and the ring is forwarded to the visible span. */
+.param-switch {
+  position: relative;
+  display: inline-flex;
+  width: 32px;
+  height: 18px;
+  justify-self: start;
+}
+
+.param-switch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.param-switch span {
+  position: relative;
+  flex: 1;
+  border: 1px solid var(--line-hard);
+  border-radius: 9px;
+  background: var(--inset);
+  transition: background var(--fast) linear, border-color var(--fast) linear;
+}
+
+.param-switch span::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ink-3);
+  transition: transform var(--fast) linear, background var(--fast) linear;
+}
+
+.param-switch input:checked + span {
+  border-color: var(--top-edge);
+  background: var(--top-wash);
+}
+
+.param-switch input:checked + span::after {
+  transform: translateX(14px);
+  background: var(--top);
+}
+
+.param-switch input:focus-visible + span {
+  outline: 1px solid var(--top);
+  outline-offset: 1px;
+}
+
+.param-switch input:disabled + span {
+  opacity: 0.45;
+}
+
+.param-switch input:disabled {
+  cursor: default;
+}
+
+/* -- file ----------------------------------------------------------------- */
+.param-file {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.param-file button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
+  height: var(--ctl-h);
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--inset);
+  color: var(--ink);
+  font-size: var(--t-tiny);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.param-file button:hover {
+  background: var(--raise);
+}
+
+/* Qualified with the parent so it outranks `.param-file button` above without
+   reaching for !important. */
+.param-file button.param-file-clear {
+  flex: 0 0 auto;
+  color: var(--ink-3);
+}
+
+/* -- WGSL editor ----------------------------------------------------------
+   Its own sunken surface so the code plainly is not a form field. */
+.param-code {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.param-code textarea {
+  min-height: 180px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-2);
+  background: var(--void);
+  color: #d5e0d8;
+  font-family: var(--mono);
+  font-size: var(--t-small);
+  line-height: 1.6;
+  tab-size: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  resize: vertical;
+}
+
+.param-code-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+}
+
+.param-code-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 22px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.param-code-actions button:first-child:not(:disabled) {
+  border-color: var(--top-edge);
+  background: var(--top-wash);
+  color: var(--top);
+}
+
+.param-code-actions button:hover:not(:disabled) {
+  background: var(--float);
+}
+
+/* Not --ink-4: these two sit on a near-black well and would vanish entirely,
+   and the user needs to know a Compile button exists before they start typing. */
+.param-code-actions button:disabled {
+  color: var(--ink-3);
+  border-color: var(--line);
+}
+
+/* ==========================================================================
+   12. OPERATOR BROWSER
+   ========================================================================== */
+
+.browser-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: start center;
+  padding: 9vh var(--sp-5) var(--sp-5);
+  background: rgba(3, 4, 5, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.browser {
+  width: min(760px, 100%);
+  max-height: 78vh;
+  display: grid;
+  /* head | search | results | foot — only the results row scrolls. */
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-3);
+  background: var(--panel);
+  /* The one shadow in the app: this is the only element that genuinely floats
+     above the workspace and needs to detach from it. */
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.browser > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.browser > header span {
+  display: block;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+}
+
+.browser > header strong {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--t-lead);
+  font-weight: 600;
+}
+
+.browser > header button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+}
+
+.browser > header button:hover {
+  background: var(--float);
+  color: var(--ink);
+}
+
+.browser-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4);
+  height: 42px;
+  border-bottom: 1px solid var(--line);
+  background: var(--inset);
+  color: var(--ink-3);
+}
+
+.browser-search:focus-within {
+  color: var(--top);
+}
+
+.browser-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--t-lead);
+}
+
+.browser-search input::placeholder {
+  color: var(--ink-4);
+}
+
+.browser-count {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+}
+
+.browser-results {
+  min-height: 0;
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.browser-empty {
+  padding: var(--sp-5) var(--sp-3);
+  text-align: center;
+}
+
+.browser-group h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-2) var(--sp-2);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+.browser-group h3 span {
+  padding: 0 4px;
+  border-radius: var(--r-1);
+  background: var(--raise);
+  color: var(--ink-4);
+  font-variant-numeric: tabular-nums;
+}
+
+.browser-group > div {
+  display: grid;
+  gap: 1px;
+}
+
+.browser-group button {
+  display: grid;
+  /* badge | label+description | TD equivalent. The middle column is the only
+     flexible one, so badges and TD names each hold their own vertical rule. */
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  padding: var(--sp-2) var(--sp-2);
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: var(--r-2);
+  background: transparent;
+  text-align: left;
+  color: var(--ink-2);
+}
+
+/* Keyboard cursor. It has to be unmistakable at a glance because Enter acts
+   on it: a filled surface, a left bar, and full-strength label ink. */
+.browser-group button[data-active="true"] {
+  border-left-color: var(--top);
+  background: var(--float);
+  color: var(--ink);
+}
+
+.browser-group button strong {
+  display: block;
+  overflow: hidden;
+  font-size: var(--t-body);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.browser-group button[data-active="true"] strong {
+  color: var(--top);
+}
+
+.browser-group button small {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: var(--t-tiny);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.browser-group button em {
+  color: var(--ink-4);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-style: normal;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Family badge: same two-colour code as the ports and the minimap. */
+.family {
+  display: grid;
+  place-items: center;
+  height: 18px;
+  border-radius: var(--r-1);
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 700;
+  font-style: normal;
+  letter-spacing: 0.08em;
+}
+
+.family-top {
+  background: var(--top);
+  color: #07100a;
+}
+
+.family-chop {
+  background: var(--chop);
+  color: #04121e;
+}
+
+.browser-foot {
+  display: flex;
+  gap: var(--sp-4);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--line);
+  background: var(--void);
+  color: var(--ink-4);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+}
+
+.browser-foot span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+/* ==========================================================================
+   13. HISTORY
+   ========================================================================== */
+
+.history-filters {
+  display: flex;
+  gap: 1px;
+  padding: 1px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--inset);
+}
+
+.history-filters button {
+  height: 20px;
+  padding: 0 var(--sp-2);
+  border: 0;
+  border-radius: var(--r-1);
+  background: transparent;
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.history-filters button:hover {
+  color: var(--ink-2);
+}
+
+.history-filters button.is-active {
+  background: var(--float);
+  color: var(--ink);
+}
+
+.history-revert {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--void);
+  color: var(--ink-3);
+  font-size: var(--t-tiny);
+}
+
+.history-revert select {
+  height: 22px;
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background-color: var(--raise);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  padding: 0 20px 0 var(--sp-2);
+}
+
+.history-revert button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: 22px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+  font-size: var(--t-tiny);
+  white-space: nowrap;
+}
+
+.history-revert button:hover:not(:disabled) {
+  border-color: rgba(255, 180, 60, 0.35);
+  background: var(--warn-wash);
+  color: var(--warn);
+}
+
+.history-revert button:disabled {
+  color: var(--ink-4);
+  border-color: var(--line);
+}
+
+.history-list {
+  min-height: 0;
+  padding: var(--sp-1) 0 var(--sp-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.history-empty {
+  padding: var(--sp-4) var(--sp-3);
+}
+
+/* A dense log: 22px rows, three columns, one hairline every row. */
+.history-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 3px var(--sp-3) 3px calc(var(--sp-3) - 2px);
+  /* The left border is the change-kind code; the row background is the
+     human/agent code. Two independent axes, neither shouting. */
+  border-left: 2px solid var(--line);
+}
+
+.history-row:hover {
+  background: var(--raise);
+}
+
+.history-actor {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--r-1);
+  /* Colour arrives inline from the actor record, so tint from currentColor
+     rather than hard-coding a per-actor palette here. */
+  background: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, currentColor 13%, transparent);
+}
+
+.history-label {
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: var(--t-small);
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.history-label:hover:not(:disabled) {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.history-label:disabled {
+  color: var(--ink-3);
+}
+
+.history-row time {
+  color: var(--ink-4);
+  font-size: var(--t-micro);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Agent attribution. This is the feature that lets a human see what an AI
+   changed, so it is a persistent surface difference rather than a colour
+   flourish: a lifted row plus a monospace label, legible without shouting. */
+.history-row.is-agent {
+  background: rgba(255, 255, 255, 0.028);
+}
+
+.history-row.is-agent:hover {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+.history-row.is-agent .history-label {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+}
+
+.history-row.is-agent .history-actor {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+/* Change kinds. Structural edits get the signal colours, destructive edits
+   red, everything else stays neutral so the log does not turn into confetti. */
+.history-row.kind-create {
+  border-left-color: var(--top-dim);
+}
+
+.history-row.kind-delete {
+  border-left-color: var(--error);
+}
+
+.history-row.kind-connect {
+  border-left-color: var(--chop-dim);
+}
+
+.history-row.kind-disconnect {
+  border-left-color: rgba(105, 183, 255, 0.28);
+}
+
+.history-row.kind-parameter {
+  border-left-color: var(--line-hard);
+}
+
+.history-row.kind-layout,
+.history-row.kind-document {
+  border-left-color: var(--line);
+}
+
+.history-row.kind-revert {
+  border-left-color: var(--warn);
+}
+
+/* ==========================================================================
+   14. SESSION
+   ========================================================================== */
+
+.session-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-height: 0;
+  padding: var(--sp-3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.session-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--raise);
+}
+
+.session-block h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-weight: 500;
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.session-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  height: var(--ctl-h);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--float);
+  color: var(--ink);
+  font-size: var(--t-small);
+  white-space: nowrap;
+}
+
+.session-row button:hover:not(:disabled) {
+  background: #22282a;
+}
+
+.session-row button:disabled {
+  color: var(--ink-4);
+  background: var(--inset);
+}
+
+.session-row button.is-active {
+  border-color: var(--top-edge);
+  background: var(--top-wash);
+  color: var(--top);
+}
+
+.session-row select {
+  flex: 1;
+  min-width: 0;
+  height: var(--ctl-h);
+  padding: 0 22px 0 var(--sp-2);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background-color: var(--inset);
+  color: var(--ink);
+  font-size: var(--t-tiny);
+  text-overflow: ellipsis;
+}
+
+.session .notice {
+  align-items: center;
+}
+
+/* -- meters ---------------------------------------------------------------
+   Both meters are numeric signal, so both are CHOP blue; the accent meter
+   (beat) separates itself by weight, not by inventing a third hue. */
+.meters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.meter {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--sp-2);
+  grid-column: 1;
+}
+
+.meter span {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.meter-track {
+  height: 6px;
+  border-radius: 1px;
+  background: var(--inset);
+  box-shadow: inset 0 0 0 1px var(--line-hard);
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  background: var(--chop-dim);
+  /* Short but non-zero so a level meter reads as a level and not as strobing. */
+  transition: width 60ms linear;
+}
+
+.meter.is-accent .meter-track {
+  height: 8px;
+}
+
+.meter.is-accent .meter-fill {
+  background: var(--chop);
+}
+
+.meter-bpm {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* -- share targets --------------------------------------------------------
+   84px is the smallest a QR reliably scans from a phone at arm's length. */
+.share {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: var(--sp-3);
+  padding: var(--sp-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  background: var(--inset);
+}
+
+.share.is-connected {
+  border-color: var(--top-edge);
+}
+
+.share img,
+.share-qr-placeholder {
+  width: 84px;
+  height: 84px;
+  border-radius: var(--r-1);
+  /* QR codes need their white quiet zone; this is not decoration. */
+  background: #fff;
+}
+
+.share-qr-placeholder {
+  background: var(--raise);
+}
+
+.share > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.share strong {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--mono);
+  font-size: var(--t-small);
+}
+
+.share-live {
+  padding: 1px 4px;
+  border-radius: var(--r-1);
+  background: var(--top-wash);
+  color: var(--top);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.share code {
+  overflow: hidden;
+  color: var(--ink-3);
+  font-size: var(--t-micro);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.share-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: auto;
+}
+
+.share-actions button,
+.share-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: 20px;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--line-hard);
+  border-radius: var(--r-2);
+  background: var(--raise);
+  color: var(--ink-2);
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.share-actions button:hover,
+.share-actions a:hover {
+  background: var(--float);
+  color: var(--ink);
+}
+
+/* -- engine readout -------------------------------------------------------- */
+.session-gpu dl {
+  display: grid;
+  gap: 1px;
+}
+
+.session-gpu dl > div {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: var(--sp-2);
+  padding: 2px 0;
+}
+
+.session-gpu dt {
+  color: var(--ink-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: var(--track);
+  text-transform: uppercase;
+}
+
+.session-gpu dd {
+  overflow: hidden;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: var(--t-tiny);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   15. SCROLLBARS
+   ========================================================================== */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2b3234 transparent;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: #2b3234;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3c4547;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* ==========================================================================
+   16. RESPONSIVE
+   ========================================================================== */
+
+/* Below ~1100px a 396px side column would leave the canvas unusable, so the
+   column moves under it and the whole shell starts scrolling as one page. */
+@media (max-width: 1100px) {
+  body {
+    overflow: auto;
+  }
+
+  .shell {
+    height: auto;
+    min-height: 100dvh;
+    grid-template-rows: var(--topbar-h) auto auto;
+  }
+
+  .toolbar {
+    height: auto;
+    min-height: var(--toolbar-h);
+    flex-wrap: wrap;
+    padding: var(--sp-2) var(--sp-3);
+    row-gap: var(--sp-2);
+  }
+
+  .toolbar-spacer {
+    display: none;
+  }
+
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 62vh auto;
+  }
+
+  .canvas-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* Below the canvas the side column is wide and short, which is the wrong
+     shape for one stack: the monitor would fill the width and the parameter
+     sliders would run a metre long. Split it in two instead — monitor left at
+     a sane size, panels right — and let content set the height. */
+  .side {
+    grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+    /* The tabs row is pinned rather than `auto`: the monitor spans both rows,
+       and an auto track would absorb its overflow and leave a gap under the
+       tabs instead of letting column one simply be the taller one. */
+    grid-template-rows: var(--tabs-h) auto;
+  }
+
+  .monitor {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-content: start;
+    border-right: 1px solid var(--line);
+  }
+
+  .side-tabs {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .side-panel {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .side-panel,
+  .inspector,
+  .history,
+  .session {
+    overflow: visible;
+  }
+
+  .inspector-body,
+  .session-body,
+  .history-list {
+    overflow: visible;
+  }
+
+  .browser {
+    max-height: 82vh;
+  }
+}
+
+@media (max-width: 720px) {
+  .side {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+
+  .monitor {
+    grid-column: 1;
+    grid-row: 1;
+    border-right: 0;
+    /* Single column again, so cap the monitor by hand rather than by column. */
+    max-width: 560px;
+    margin-inline: auto;
+  }
+
+  .side-tabs,
+  .side-panel {
+    grid-column: 1;
+  }
+
+  .side-tabs {
+    grid-row: 2;
+  }
+
+  .side-panel {
+    grid-row: 3;
+  }
+
+  .topbar {
+    padding: 0 var(--sp-3);
+  }
+
+  .topbar-status .chip:not(.state-running):not(.state-error) {
+    display: none;
+  }
+
+  .browser-backdrop {
+    padding: var(--sp-4) var(--sp-2);
+  }
+
+  .browser-group button {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .browser-group button em {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   17. MOTION
+   ========================================================================== */
+
+/* The parameter port list appears and vanishes mid-drag. Growing it over one
+   frame-ish interval stops the card from snapping under the cursor. There is
+   no exit animation: React unmounts the list, and an instant collapse is less
+   distracting than a lingering one. */
+@media (prefers-reduced-motion: no-preference) {
+  .node-params {
+    max-height: 200px;
+    transition: max-height var(--med) linear, opacity var(--med) linear;
+  }
+
+  @starting-style {
+    .node-params {
+      max-height: 0;
+      opacity: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important; /* React Flow's dashdraw is inline-authored at 0.5s */
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* The flow animation is informative, but it is also the app's only
+     continuous motion, so it is the first thing to go. */
+  .react-flow__edge.animated path {
+    animation: none !important; /* set on .react-flow__edge.animated path by @xyflow */
+    stroke-dasharray: none;
+  }
+}
