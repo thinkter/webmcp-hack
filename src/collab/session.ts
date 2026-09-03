@@ -382,6 +382,49 @@ function rememberRoom(code: string): void {
   }
 }
 
+/** Keep the address bar in lockstep with the connected room so the current URL is always an invite. */
+function syncRoomUrl(code: string | null): void {
+  if (typeof window === 'undefined') return
+  const url = new URL(window.location.href)
+  if (code && code.length > 0) url.searchParams.set('room', code)
+  else url.searchParams.delete('room')
+  const next = `${url.pathname}${url.search}${url.hash}`
+  if (`${window.location.pathname}${window.location.search}${window.location.hash}` === next) return
+  window.history.replaceState({}, '', next)
+}
+
+/**
+ * Updates the pending lobby code without connecting.
+ *
+ * Ignored while a socket is open: the connected room only changes through
+ * `joinSession`, so QR codes and invite links never point at a room we left.
+ */
+export function setRoomCode(next: string): void {
+  if (provider !== null) return
+  const cleaned = next
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9-]/g, '')
+    .slice(0, 120)
+  if (cleaned.length === 0 || cleaned === room) return
+  room = cleaned
+  rememberRoom(room)
+  publish()
+}
+
+/** Mints a fresh lobby code. Switches immediately if already online. */
+export function mintRoom(): string {
+  const code = generateRoomCode()
+  if (provider !== null) {
+    joinSession(code)
+    return code
+  }
+  room = code
+  rememberRoom(room)
+  publish()
+  return code
+}
+
 // -------------------------------------------------------- module singleton ----
 
 let room = initialRoom()
@@ -1219,10 +1262,11 @@ const bootstrap = (): void => {
 export function joinSession(next?: string): void {
   const target = normalizeRoom(next ?? room)
   if (provider !== null && target === room && !fatal) return
-  if (provider !== null) leaveSession()
+  if (provider !== null) leaveSession({ keepQuery: true })
 
   room = target
   rememberRoom(room)
+  syncRoomUrl(room)
   socketStatus = 'connecting'
   errorMessage = null
   fatal = false
@@ -1312,7 +1356,7 @@ export function joinSession(next?: string): void {
  * including everything the collaborators contributed — stays exactly as it is,
  * it simply stops being shared.
  */
-export function leaveSession(): void {
+export function leaveSession(options?: { keepQuery?: boolean }): void {
   if (driftTimer !== null) {
     clearTimeout(driftTimer)
     driftTimer = null
@@ -1365,6 +1409,7 @@ export function leaveSession(): void {
 
   // `room` is deliberately left alone: the QR codes in the Session panel stay
   // valid and rejoining lands in the same room.
+  if (!options?.keepQuery) syncRoomUrl(null)
   publish()
 }
 
