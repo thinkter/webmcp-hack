@@ -8,6 +8,9 @@
     "dev:server": "node server/index.mjs",
     "server": "node server/index.mjs",
     "build": "tsc -b && vite build",
+    "deploy": "npm run build && wrangler deploy",
+    "dev:worker": "wrangler dev",
+    "preview:worker": "npm run build && wrangler dev",
     "lint": "eslint .",
     "preview": "vite preview"
   },
