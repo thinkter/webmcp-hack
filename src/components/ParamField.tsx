@@ -380,6 +380,79 @@ function DeviceEditor({
   )
 }
 
+async function processImageFile(file: File): Promise<string> {
+  const nameFragment = `#name=${encodeURIComponent(file.name)}`
+
+  if (file.type === 'image/svg+xml' || (file.size <= 1024 * 1024 && file.type === 'image/gif')) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(`${reader.result as string}${nameFragment}`)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  if (file.size <= 1024 * 1024) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(`${reader.result as string}${nameFragment}`)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file)
+    const maxDim = 1920
+    let { width, height } = bitmap
+    if (width > maxDim || height > maxDim) {
+      if (width > height) {
+        height = Math.round((height * maxDim) / width)
+        width = maxDim
+      } else {
+        width = Math.round((width * maxDim) / height)
+        height = maxDim
+      }
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Could not get 2d canvas context')
+    ctx.drawImage(bitmap, 0, 0, width, height)
+    bitmap.close()
+
+    const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg'
+    const dataUrl = canvas.toDataURL(mime, 0.85)
+    return `${dataUrl}${nameFragment}`
+  } catch {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(`${reader.result as string}${nameFragment}`)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+}
+
+function getFileName(value: string): string {
+  if (!value) return 'None'
+  if (value.startsWith('data:')) {
+    const hashIdx = value.indexOf('#name=')
+    if (hashIdx !== -1) {
+      try {
+        return decodeURIComponent(value.slice(hashIdx + 6))
+      } catch {
+        return 'Image file'
+      }
+    }
+    const match = value.match(/data:image\/([a-zA-Z0-9]+)/)
+    return match ? `Image (${match[1]})` : 'Image file'
+  }
+  if (value.startsWith('blob:')) return 'Local file'
+  return value.split('/').pop() || 'File'
+}
+
 function FileEditor({
   id,
   value,
@@ -401,7 +474,7 @@ function FileEditor({
     [],
   )
 
-  const name = value.startsWith('blob:') ? 'Local file' : value ? value.split('/').pop() : 'None'
+  const name = getFileName(value)
 
   return (
     <div className="param-file">
@@ -418,10 +491,16 @@ function FileEditor({
         onChange={(event) => {
           const file = event.target.files?.[0]
           if (!file) return
-          if (previous.current) URL.revokeObjectURL(previous.current)
-          const url = URL.createObjectURL(file)
-          previous.current = url
-          onChange(url)
+          if (file.type.startsWith('image/')) {
+            void processImageFile(file).then((dataUrl) => {
+              onChange(dataUrl)
+            })
+          } else {
+            if (previous.current) URL.revokeObjectURL(previous.current)
+            const url = URL.createObjectURL(file)
+            previous.current = url
+            onChange(url)
+          }
           event.target.value = ''
         }}
       />

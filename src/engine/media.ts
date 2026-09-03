@@ -437,8 +437,9 @@ export class MediaRegistry {
   // -------------------------------------------------------------- image ----
 
   private syncImage(slot: Slot, request: MediaRequest): void {
-    const url = str(request.params.file) || str(request.params.url)
-    const signature = `image|${url}`
+    const rawUrl = str(request.params.file) || str(request.params.url)
+    const [url] = rawUrl.split('#')
+    const signature = `image|${rawUrl}`
     if (signature === slot.signature) return
     slot.signature = signature
     this.teardown(slot)
