@@ -1,28 +1,201 @@
-import { useGraphStore } from '../graph/store'
-import { operators } from '../graph/operators'
-import { buildExecutionPlan } from '../graph/execution'
+/**
+ * WebMCP registration.
+ *
+ * The browser API is still moving, so this file assumes as little as possible:
+ *
+ *  - the context object may hang off `document.modelContext` (the shape used by
+ *    the Chrome prototype and the current explainer) or `navigator.modelContext`
+ *    (used by some builds and by the polyfill); whichever exists is used;
+ *  - tools may be provided declaratively in one call, `provideContext({ tools })`,
+ *    or one at a time with `registerTool(tool)`. Both spellings are implemented
+ *    here behind one adapter, and either may return a promise or nothing;
+ *  - unregistration may be `unregisterTool(name)`, an `AbortSignal` passed at
+ *    registration time, or a disposer returned from the call. All three are
+ *    handled, and the whole-set spelling is torn down by re-providing an empty
+ *    tool list.
+ *
+ * If none of that is present the editor must behave exactly as it does today,
+ * so `registerAgentTools()` reports `supported: false` and never throws.
+ */
 
-type Tool = { name:string; description:string; inputSchema?:Record<string,unknown>; annotations?:{readOnlyHint?:boolean}; execute:(input:Record<string,unknown>)=>unknown|Promise<unknown> }
-type ModelContext = { registerTool:(tool:Tool,options?:{signal?:AbortSignal})=>Promise<void> }
-declare global { interface Document { modelContext?: ModelContext } }
-const schema=(properties:Record<string,unknown>,required:string[]=[])=>({type:'object',properties,required,additionalProperties:false})
-const text=(value:unknown)=>({content:[{type:'text',text:JSON.stringify(value,null,2)}]})
-const snapshot=()=>{const {nodes,edges}=useGraphStore.getState();return{execution:buildExecutionPlan(nodes,edges),nodes:nodes.map(({id,position,data})=>({id,position,...data})),connections:edges.map(({id,source,target})=>({id,source,target}))}}
-function createNode(input:Record<string,unknown>){
-  const legacy:Record<string,string>={source:'camera',effect:'glitch',output:'preview'},operatorId=String(input.operator_id||legacy[String(input.kind)]||'')
-  if(!operators.some(operator=>operator.id===operatorId))throw new Error(`Unknown operator_id: ${operatorId}`)
-  const state=useGraphStore.getState(),id=state.addOperator(operatorId)
-  if(input.label)state.setNodeParameter(id,'label',String(input.label))
-  return useGraphStore.getState().nodes.find(node=>node.id===id)
+import { ToolError } from './describe'
+import { agentTools, type AgentTool } from './tools'
+
+// ------------------------------------------------------------- the API shape ----
+
+type ToolResult = {
+  content: Array<{ type: 'text'; text: string }>
+  isError?: boolean
 }
-const tools:Tool[]=[
-  {name:'inspect_graph',description:'Inspect the complete live visual graph, including nodes, parameters, positions, and connections.',inputSchema:schema({}),annotations:{readOnlyHint:true},execute:()=>text(snapshot())},
-  {name:'list_operators',description:'List every available TOP and CHOP operator with its typed input and output ports.',inputSchema:schema({}),annotations:{readOnlyHint:true},execute:()=>text(operators)},
-  {name:'create_node',description:'Create a typed TOP or CHOP operator node. Call list_operators to discover operator_id values.',inputSchema:schema({operator_id:{type:'string'},label:{type:'string'}},['operator_id']),execute:(input)=>text({created:createNode(input)})},
-  {name:'connect_nodes',description:'Connect two typed ports. Texture outputs only connect to texture inputs; numeric CHOP outputs connect to numeric inputs or parameters.',inputSchema:schema({source:{type:'string'},source_handle:{type:'string'},target:{type:'string'},target_handle:{type:'string'}},['source','source_handle','target','target_handle']),execute:({source,source_handle,target,target_handle})=>{const state=useGraphStore.getState(),connection={source:String(source),sourceHandle:String(source_handle),target:String(target),targetHandle:String(target_handle)};if(!state.isValidConnection(connection))throw new Error('Invalid connection: ports are incompatible, occupied, or form a self-loop.');state.onConnect(connection);return text({connected:connection})}},
-  {name:'set_parameter',description:'Set a live node parameter such as effect, intensity, enabled, or label.',inputSchema:schema({node_id:{type:'string'},parameter:{type:'string'},value:{}},['node_id','parameter','value']),execute:({node_id,parameter,value})=>{if(!useGraphStore.getState().nodes.some(n=>n.id===node_id))throw new Error(`Node not found: ${node_id}`);useGraphStore.getState().setNodeParameter(String(node_id),String(parameter),value);return text({updated:{node_id,parameter,value}})}},
-  {name:'delete_node',description:'Delete a node and all of its graph connections.',inputSchema:schema({node_id:{type:'string'}},['node_id']),execute:({node_id})=>{useGraphStore.getState().deleteNode(String(node_id));return text({deleted:node_id})}},
-  {name:'list_sources',description:'List all available visual source nodes and their live state.',inputSchema:schema({}),annotations:{readOnlyHint:true},execute:()=>text(useGraphStore.getState().nodes.filter(n=>n.data.kind==='source').map(n=>({id:n.id,...n.data})))},
-  {name:'list_outputs',description:'List all output nodes and their live state.',inputSchema:schema({}),annotations:{readOnlyHint:true},execute:()=>text(useGraphStore.getState().nodes.filter(n=>n.data.kind==='output').map(n=>({id:n.id,...n.data})))},
-]
-export function registerWebMCP(){const context=document.modelContext;if(!context)return{supported:false,toolCount:0,dispose:()=>undefined};const controller=new AbortController();Promise.all(tools.map(tool=>context.registerTool(tool,{signal:controller.signal}))).catch(error=>console.error('WebMCP registration failed',error));return{supported:true,toolCount:tools.length,dispose:()=>controller.abort()}}
+
+type ToolDescriptor = {
+  name: string
+  description: string
+  inputSchema: Record<string, unknown>
+  annotations?: { readOnlyHint?: boolean }
+  execute: (args: Record<string, unknown>) => Promise<ToolResult>
+}
+
+type Unsubscribe = (() => void) | { dispose?: () => void } | void
+
+type ModelContextLike = {
+  /** Declarative form: replaces the whole tool set. */
+  provideContext?: (payload: { tools: ToolDescriptor[] }) => unknown
+  /** Imperative form: one tool at a time. */
+  registerTool?: (tool: ToolDescriptor, options?: { signal?: AbortSignal }) => Unsubscribe | Promise<Unsubscribe>
+  unregisterTool?: (name: string) => unknown
+}
+
+declare global {
+  interface Document {
+    modelContext?: ModelContextLike
+  }
+  interface Navigator {
+    modelContext?: ModelContextLike
+  }
+}
+
+export type AgentRegistration = {
+  toolCount: number
+  supported: boolean
+  dispose: () => void
+}
+
+const noop = (): void => undefined
+
+// ------------------------------------------------------------------ results ----
+
+const textResult = (text: string, isError = false): ToolResult =>
+  isError ? { content: [{ type: 'text', text }], isError: true } : { content: [{ type: 'text', text }] }
+
+/**
+ * The shared handler. Agents recover from good errors and flounder on bad ones,
+ * so a failure always names the tool, says what was wrong, and suggests the next
+ * call. `ToolError` messages are written for the agent; anything else is a bug in
+ * this app and is reported as such rather than being dressed up as user error.
+ */
+async function runTool(tool: AgentTool, rawArgs: unknown): Promise<ToolResult> {
+  const args =
+    rawArgs && typeof rawArgs === 'object' && !Array.isArray(rawArgs)
+      ? (rawArgs as Record<string, unknown>)
+      : {}
+
+  try {
+    const text = await tool.execute(args)
+    return textResult(text.length ? text : `${tool.name} produced no output.`)
+  } catch (cause) {
+    if (cause instanceof ToolError) {
+      return textResult(`${tool.name} failed: ${cause.message}`, true)
+    }
+    const message = cause instanceof Error ? cause.message : String(cause)
+    console.error(`[webmcp] ${tool.name} threw`, cause)
+    return textResult(
+      `${tool.name} hit an unexpected error in the editor: ${message}. ` +
+        'The patch may be unchanged. Call inspect_graph to see the current state before retrying, ' +
+        'and get_system_health if the render engine looks wrong.',
+      true,
+    )
+  }
+}
+
+const toDescriptor = (tool: AgentTool): ToolDescriptor => ({
+  name: tool.name,
+  description: tool.description,
+  inputSchema: tool.inputSchema,
+  annotations: { readOnlyHint: tool.readOnly },
+  execute: (args) => runTool(tool, args),
+})
+
+// ------------------------------------------------------------- registration ----
+
+function findContext(): ModelContextLike | null {
+  // `document` first: that is where the shipping prototype puts it. `navigator`
+  // is checked second because some builds and the polyfill expose it there.
+  const candidates: Array<ModelContextLike | undefined> = [
+    typeof document === 'undefined' ? undefined : document.modelContext,
+    typeof navigator === 'undefined' ? undefined : navigator.modelContext,
+  ]
+  for (const candidate of candidates) {
+    if (candidate && (candidate.provideContext || candidate.registerTool)) return candidate
+  }
+  return null
+}
+
+export function registerAgentTools(): AgentRegistration {
+  const context = findContext()
+  if (!context) {
+    // No WebMCP in this browser. The editor is fully usable without it.
+    return { toolCount: 0, supported: false, dispose: noop }
+  }
+
+  const descriptors = agentTools.map(toDescriptor)
+
+  try {
+    if (typeof context.provideContext === 'function') {
+      context.provideContext({ tools: descriptors })
+      return {
+        toolCount: descriptors.length,
+        supported: true,
+        dispose: () => {
+          try {
+            // The declarative form is a whole-set replacement, so an empty list
+            // is how a set is withdrawn.
+            context.provideContext?.({ tools: [] })
+          } catch (cause) {
+            console.warn('[webmcp] could not withdraw tools', cause)
+          }
+        },
+      }
+    }
+
+    const register = context.registerTool
+    if (typeof register === 'function') {
+      const controller = new AbortController()
+      const disposers: Array<() => void> = []
+
+      for (const descriptor of descriptors) {
+        const returned = register.call(context, descriptor, { signal: controller.signal })
+        // The call may be sync, may return a disposer, or may return a promise
+        // of one. Collect whatever comes back without depending on which.
+        void Promise.resolve(returned)
+          .then((value) => {
+            if (typeof value === 'function') disposers.push(value)
+            else if (value && typeof value.dispose === 'function') disposers.push(() => value.dispose?.())
+          })
+          .catch((cause: unknown) => {
+            console.error(`[webmcp] registering ${descriptor.name} failed`, cause)
+          })
+      }
+
+      return {
+        toolCount: descriptors.length,
+        supported: true,
+        dispose: () => {
+          controller.abort()
+          for (const disposer of disposers) {
+            try {
+              disposer()
+            } catch (cause) {
+              console.warn('[webmcp] tool disposer threw', cause)
+            }
+          }
+          if (typeof context.unregisterTool === 'function') {
+            for (const descriptor of descriptors) {
+              try {
+                context.unregisterTool(descriptor.name)
+              } catch (cause) {
+                console.warn(`[webmcp] could not unregister ${descriptor.name}`, cause)
+              }
+            }
+          }
+        },
+      }
+    }
+  } catch (cause) {
+    // A hostile or half-implemented API must not take the editor down with it.
+    console.error('[webmcp] tool registration failed', cause)
+    return { toolCount: 0, supported: false, dispose: noop }
+  }
+
+  return { toolCount: 0, supported: false, dispose: noop }
+}
