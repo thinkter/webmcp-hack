@@ -241,7 +241,7 @@ function Workspace() {
           </span>
           <span className={`chip status-${session.status}`}>
             <Radio size={12} />
-            {session.shared ? `${session.peers} in session` : 'solo'}
+            {session.shared ? `${session.room} · ${session.peers}` : session.room}
           </span>
         </div>
       </header>
