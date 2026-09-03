@@ -1,72 +1,80 @@
 /**
  * WebMCP registration.
  *
- * The browser API is still moving, so this file assumes as little as possible:
+ * Implements the W3C Web Machine Learning Community Group's WebMCP specification
+ * (webmachinelearning.github.io/webmcp) for exposing in-browser tools on `document.modelContext`.
  *
- *  - the context object may hang off `document.modelContext` (the shape used by
- *    the Chrome prototype and the current explainer) or `navigator.modelContext`
- *    (used by some builds and by the polyfill); whichever exists is used;
- *  - tools may be provided declaratively in one call, `provideContext({ tools })`,
- *    or one at a time with `registerTool(tool)`. Both spellings are implemented
- *    here behind one adapter, and either may return a promise or nothing;
- *  - unregistration may be `unregisterTool(name)`, an `AbortSignal` passed at
- *    registration time, or a disposer returned from the call. All three are
- *    handled, and the whole-set spelling is torn down by re-providing an empty
- *    tool list.
- *
- * If none of that is present the editor must behave exactly as it does today,
- * so `registerAgentTools()` reports `supported: false` and never throws.
+ * Features:
+ *  - Native detection: Uses the browser's native `document.modelContext` when available
+ *    (Chrome with `--enable-features=WebMCP` or origin-trial token, ChatGPT in-app browser).
+ *  - Spec polyfill fallback: In browsers without native support, initializes the spec-pure
+ *    `@mcp-b/webmcp-polyfill` so tools can be discovered and executed in every environment.
+ *  - Standard lifecycle: Uses `document.modelContext.registerTool(tool, { signal })` with
+ *    an AbortSignal for deterministic unregistration on teardown.
+ *  - Resilient execution: `execute` handles both parsed objects and serialized JSON arguments,
+ *    supports abort signals, and returns structured MCP responses `{ content, text, isError }`.
+ *  - Dev ergonomics: Exposes `window.webmcp` and enhances `executeTool` to accept either
+ *    tool objects or tool names with string/object parameters.
  */
 
+import { initializeWebMCPPolyfill } from '@mcp-b/webmcp-polyfill'
+import type { RegisteredTool } from '@mcp-b/webmcp-types'
 import { ToolError } from './describe'
 import { agentTools, type AgentTool } from './tools'
 
-// ------------------------------------------------------------- the API shape ----
+// ------------------------------------------------------------- types ----
 
-type ToolResult = {
+export type ToolResult = {
   content: Array<{ type: 'text'; text: string }>
+  text: string
   isError?: boolean
-}
-
-type ToolDescriptor = {
-  name: string
-  description: string
-  inputSchema: Record<string, unknown>
-  annotations?: { readOnlyHint?: boolean }
-  execute: (args: Record<string, unknown>) => Promise<ToolResult>
-}
-
-type Unsubscribe = (() => void) | { dispose?: () => void } | void
-
-type ModelContextLike = {
-  /** Declarative form: replaces the whole tool set. */
-  provideContext?: (payload: { tools: ToolDescriptor[] }) => unknown
-  /** Imperative form: one tool at a time. */
-  registerTool?: (tool: ToolDescriptor, options?: { signal?: AbortSignal }) => Unsubscribe | Promise<Unsubscribe>
-  unregisterTool?: (name: string) => unknown
-}
-
-declare global {
-  interface Document {
-    modelContext?: ModelContextLike
-  }
-  interface Navigator {
-    modelContext?: ModelContextLike
-  }
+  toString(): string
 }
 
 export type AgentRegistration = {
   toolCount: number
   supported: boolean
+  isNative: boolean
   dispose: () => void
 }
 
 const noop = (): void => undefined
 
+let nativeDetected = false
+
+/**
+ * Initializes WebMCP support.
+ * If the browser already provides native `document.modelContext`, leaves it untouched.
+ * Otherwise, initializes the standard polyfill.
+ */
+export function ensureWebMCPInitialized(): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return
+
+  if ('modelContext' in document && document.modelContext) {
+    nativeDetected = true
+    return
+  }
+
+  try {
+    initializeWebMCPPolyfill({ installTestingShim: true })
+  } catch (cause) {
+    console.warn('[webmcp] polyfill initialization warning:', cause)
+  }
+}
+
+// Initialize on module load when running in a browser
+ensureWebMCPInitialized()
+
 // ------------------------------------------------------------------ results ----
 
-const textResult = (text: string, isError = false): ToolResult =>
-  isError ? { content: [{ type: 'text', text }], isError: true } : { content: [{ type: 'text', text }] }
+const textResult = (text: string, isError = false): ToolResult => ({
+  content: [{ type: 'text', text }],
+  text,
+  isError,
+  toString() {
+    return text
+  },
+})
 
 /**
  * The shared handler. Agents recover from good errors and flounder on bad ones,
@@ -74,11 +82,28 @@ const textResult = (text: string, isError = false): ToolResult =>
  * call. `ToolError` messages are written for the agent; anything else is a bug in
  * this app and is reported as such rather than being dressed up as user error.
  */
-async function runTool(tool: AgentTool, rawArgs: unknown): Promise<ToolResult> {
-  const args =
-    rawArgs && typeof rawArgs === 'object' && !Array.isArray(rawArgs)
-      ? (rawArgs as Record<string, unknown>)
-      : {}
+async function runTool(
+  tool: AgentTool,
+  rawArgs: unknown,
+  options?: { signal?: AbortSignal },
+): Promise<ToolResult> {
+  if (options?.signal?.aborted) {
+    throw options.signal.reason ?? new Error('Tool execution was cancelled.')
+  }
+
+  let args: Record<string, unknown> = {}
+  if (typeof rawArgs === 'string') {
+    try {
+      const parsed = JSON.parse(rawArgs)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        args = parsed as Record<string, unknown>
+      }
+    } catch {
+      args = {}
+    }
+  } else if (rawArgs && typeof rawArgs === 'object' && !Array.isArray(rawArgs)) {
+    args = rawArgs as Record<string, unknown>
+  }
 
   try {
     const text = await tool.execute(args)
@@ -98,104 +123,210 @@ async function runTool(tool: AgentTool, rawArgs: unknown): Promise<ToolResult> {
   }
 }
 
-const toDescriptor = (tool: AgentTool): ToolDescriptor => ({
+const toDescriptor = (tool: AgentTool) => ({
   name: tool.name,
+  title: tool.name
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' '),
   description: tool.description,
   inputSchema: tool.inputSchema,
-  annotations: { readOnlyHint: tool.readOnly },
-  execute: (args) => runTool(tool, args),
+  annotations: {
+    readOnlyHint: tool.readOnly,
+    untrustedContentHint: false,
+  },
+  execute: (args: unknown, options?: { signal?: AbortSignal }) => runTool(tool, args, options),
 })
 
-// ------------------------------------------------------------- registration ----
+// ------------------------------------------------------------- context lookup ----
+
+type ModelContextHost = {
+  modelContext?: unknown
+}
+
+type ModelContextLike = {
+  registerTool?: (tool: unknown, options?: { signal?: AbortSignal }) => unknown
+  getTools?: () => Promise<RegisteredTool[]>
+  executeTool?: (tool: RegisteredTool | string, input?: string | unknown, options?: unknown) => Promise<unknown>
+  provideContext?: (payload: { tools: unknown[] }) => unknown
+  __executeEnhanced?: boolean
+}
 
 function findContext(): ModelContextLike | null {
-  // `document` first: that is where the shipping prototype puts it. `navigator`
-  // is checked second because some builds and the polyfill expose it there.
-  const candidates: Array<ModelContextLike | undefined> = [
-    typeof document === 'undefined' ? undefined : document.modelContext,
-    typeof navigator === 'undefined' ? undefined : navigator.modelContext,
+  const candidates = [
+    typeof document === 'undefined' ? undefined : (document as unknown as ModelContextHost).modelContext,
+    typeof navigator === 'undefined' ? undefined : (navigator as unknown as ModelContextHost).modelContext,
   ]
   for (const candidate of candidates) {
-    if (candidate && (candidate.provideContext || candidate.registerTool)) return candidate
+    if (candidate && typeof candidate === 'object' && ('registerTool' in candidate || 'provideContext' in candidate)) {
+      return candidate as ModelContextLike
+    }
   }
   return null
 }
 
-export function registerAgentTools(): AgentRegistration {
-  const context = findContext()
-  if (!context) {
-    // No WebMCP in this browser. The editor is fully usable without it.
-    return { toolCount: 0, supported: false, dispose: noop }
+/**
+ * Enhances `document.modelContext.executeTool` to tolerate being called with:
+ *  - either a RegisteredTool object or a string tool name
+ *  - either a serialized JSON string or a plain JavaScript object
+ */
+function enhanceExecuteTool(context: ModelContextLike): void {
+  if (typeof context.executeTool !== 'function' || context.__executeEnhanced) return
+  const originalExecuteTool = context.executeTool.bind(context)
+
+  context.executeTool = async (
+    toolOrName: RegisteredTool | string,
+    rawInput: unknown = {},
+    options?: unknown,
+  ) => {
+    let targetTool: RegisteredTool | null = null
+    if (typeof toolOrName === 'string') {
+      const tools: RegisteredTool[] = (await context.getTools?.()) ?? []
+      targetTool = tools.find((t) => t.name === toolOrName) || null
+      if (!targetTool) {
+        throw new Error(`Tool not found: ${toolOrName}`)
+      }
+    } else {
+      targetTool = toolOrName
+    }
+
+    const inputArgsJson =
+      typeof rawInput === 'string' ? rawInput : JSON.stringify(rawInput ?? {})
+
+    return originalExecuteTool(targetTool, inputArgsJson, options)
   }
 
-  const descriptors = agentTools.map(toDescriptor)
+  context.__executeEnhanced = true
+}
 
-  try {
-    if (typeof context.provideContext === 'function') {
+// ------------------------------------------------------------- registration ----
+
+let activeRegistration: {
+  controller: AbortController
+  disposers: Array<() => void>
+} | null = null
+
+export function registerAgentTools(onUpdate?: (count: number) => void): AgentRegistration {
+  // If a previous registration is active (e.g. from React StrictMode remount or HMR),
+  // abort it cleanly before registering the fresh set.
+  if (activeRegistration) {
+    try {
+      activeRegistration.controller.abort()
+      for (const dispose of activeRegistration.disposers) {
+        dispose()
+      }
+    } catch {
+      // ignore teardown errors from previous instance
+    }
+    activeRegistration = null
+  }
+
+  ensureWebMCPInitialized()
+
+  const context = findContext()
+  if (!context) {
+    return { toolCount: 0, supported: false, isNative: false, dispose: noop }
+  }
+
+  enhanceExecuteTool(context)
+
+  const isNative = nativeDetected
+  const controller = new AbortController()
+  const disposers: Array<() => void> = []
+  activeRegistration = { controller, disposers }
+
+  const descriptors = agentTools.map(toDescriptor)
+  let registeredCount = 0
+
+  const register = context.registerTool
+  if (typeof register === 'function') {
+    for (const descriptor of descriptors) {
+      try {
+        const returned = register.call(context, descriptor, { signal: controller.signal })
+        void Promise.resolve(returned)
+          .then((value: unknown) => {
+            registeredCount++
+            onUpdate?.(registeredCount)
+            if (typeof value === 'function') {
+              disposers.push(value as () => void)
+            } else if (value && typeof (value as { dispose?: () => void }).dispose === 'function') {
+              disposers.push(() => (value as { dispose: () => void }).dispose())
+            }
+          })
+          .catch((cause: unknown) => {
+            const msg = String(cause)
+            // If already registered in this document (e.g. rapid StrictMode reload),
+            // consider it present.
+            if (msg.includes('already registered') || msg.includes('InvalidStateError')) {
+              registeredCount++
+              onUpdate?.(registeredCount)
+            } else {
+              console.warn(`[webmcp] registering ${descriptor.name} failed:`, cause)
+            }
+          })
+      } catch (err: unknown) {
+        const msg = String(err)
+        if (msg.includes('already registered') || msg.includes('InvalidStateError')) {
+          registeredCount++
+          onUpdate?.(registeredCount)
+        } else {
+          console.warn(`[webmcp] synchronous registration error for ${descriptor.name}:`, err)
+        }
+      }
+    }
+
+    // Expose convenient window.webmcp helper for console and agent exploration
+    if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ;(window as any).webmcp = {
+        getTools: () => context.getTools?.() ?? Promise.resolve([]),
+        executeTool: (name: string, input: unknown = {}) =>
+          context.executeTool?.(name, input),
+        tools: agentTools,
+        isNative,
+      }
+    }
+
+    return {
+      toolCount: descriptors.length,
+      supported: true,
+      isNative,
+      dispose: () => {
+        controller.abort()
+        for (const disposer of disposers) {
+          try {
+            disposer()
+          } catch {
+            // ignore cleanup errors
+          }
+        }
+        if (activeRegistration?.controller === controller) {
+          activeRegistration = null
+        }
+      },
+    }
+  }
+
+  // Fallback for deprecated declarative provideContext API
+  if (typeof context.provideContext === 'function') {
+    try {
       context.provideContext({ tools: descriptors })
       return {
         toolCount: descriptors.length,
         supported: true,
+        isNative,
         dispose: () => {
           try {
-            // The declarative form is a whole-set replacement, so an empty list
-            // is how a set is withdrawn.
             context.provideContext?.({ tools: [] })
           } catch (cause) {
             console.warn('[webmcp] could not withdraw tools', cause)
           }
         },
       }
+    } catch (cause) {
+      console.warn('[webmcp] provideContext failed', cause)
     }
-
-    const register = context.registerTool
-    if (typeof register === 'function') {
-      const controller = new AbortController()
-      const disposers: Array<() => void> = []
-
-      for (const descriptor of descriptors) {
-        const returned = register.call(context, descriptor, { signal: controller.signal })
-        // The call may be sync, may return a disposer, or may return a promise
-        // of one. Collect whatever comes back without depending on which.
-        void Promise.resolve(returned)
-          .then((value) => {
-            if (typeof value === 'function') disposers.push(value)
-            else if (value && typeof value.dispose === 'function') disposers.push(() => value.dispose?.())
-          })
-          .catch((cause: unknown) => {
-            console.error(`[webmcp] registering ${descriptor.name} failed`, cause)
-          })
-      }
-
-      return {
-        toolCount: descriptors.length,
-        supported: true,
-        dispose: () => {
-          controller.abort()
-          for (const disposer of disposers) {
-            try {
-              disposer()
-            } catch (cause) {
-              console.warn('[webmcp] tool disposer threw', cause)
-            }
-          }
-          if (typeof context.unregisterTool === 'function') {
-            for (const descriptor of descriptors) {
-              try {
-                context.unregisterTool(descriptor.name)
-              } catch (cause) {
-                console.warn(`[webmcp] could not unregister ${descriptor.name}`, cause)
-              }
-            }
-          }
-        },
-      }
-    }
-  } catch (cause) {
-    // A hostile or half-implemented API must not take the editor down with it.
-    console.error('[webmcp] tool registration failed', cause)
-    return { toolCount: 0, supported: false, dispose: noop }
   }
 
-  return { toolCount: 0, supported: false, dispose: noop }
+  return { toolCount: 0, supported: false, isNative: false, dispose: noop }
 }
