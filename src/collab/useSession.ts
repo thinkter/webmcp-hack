@@ -17,6 +17,8 @@ import {
   getSessionState,
   joinSession,
   leaveSession,
+  mintRoom,
+  setRoomCode,
   subscribeSession,
   type SessionStatus,
 } from './session'
@@ -36,6 +38,8 @@ export type SessionInfo = {
   adoptedRemote: boolean
   join: (room?: string) => void
   leave: () => void
+  setRoom: (room: string) => void
+  mintRoom: () => string
   copyInviteLink: () => Promise<void>
 }
 
@@ -69,6 +73,8 @@ export function useSession(): SessionInfo {
       adoptedRemote: state.adoptedRemote,
       join: joinSession,
       leave: leaveSession,
+      setRoom: setRoomCode,
+      mintRoom,
       copyInviteLink,
     }),
     [state],
