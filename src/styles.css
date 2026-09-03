@@ -2905,6 +2905,29 @@ input[type="range"]:disabled::-moz-range-thumb {
   color: var(--ink);
 }
 
+.share-actions button.is-active {
+  border-color: var(--top-edge);
+  background: var(--top-wash);
+  color: var(--top);
+}
+
+.share-pub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.share-local {
+  padding: 1px 4px;
+  border-radius: var(--r-1);
+  background: rgba(105, 183, 255, 0.16);
+  color: #69b7ff;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
 /* -- engine readout -------------------------------------------------------- */
 .session-gpu dl {
   display: grid;
