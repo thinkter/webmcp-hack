@@ -98,17 +98,42 @@ function Workspace() {
   const { screenToFlowPosition } = useReactFlow()
   const [panel, setPanel] = useState<SidePanel>('inspector')
   const [agentTools, setAgentTools] = useState(0)
+  const [isNativeWebMCP, setIsNativeWebMCP] = useState(false)
 
   useEffect(() => {
     void engine.start()
     return () => engine.stop()
   }, [])
 
-  // WebMCP is optional: the editor is fully usable without it.
+  // WebMCP tool surface: registers graph inspection & control tools
+  // on document.modelContext according to the W3C WebMCP specification.
   useEffect(() => {
-    const registration = registerAgentTools()
+    let unmounted = false
+    const registration = registerAgentTools((count) => {
+      if (!unmounted) setAgentTools(count)
+    })
     setAgentTools(registration.toolCount)
-    return registration.dispose
+    setIsNativeWebMCP(registration.isNative)
+
+    const context = document.modelContext
+    const onToolChange = async () => {
+      if (context && typeof context.getTools === 'function') {
+        try {
+          const tools = await context.getTools()
+          if (!unmounted) setAgentTools(tools.length)
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    context?.addEventListener?.('toolchange', onToolChange)
+
+    return () => {
+      unmounted = true
+      context?.removeEventListener?.('toolchange', onToolChange)
+      registration.dispose()
+    }
   }, [])
 
   // Autosave, so a refresh mid-session does not lose the patch.
@@ -235,9 +260,18 @@ function Workspace() {
                 ? 'GPU offline'
                 : 'starting'}
           </span>
-          <span className={`chip ${agentTools ? 'is-good' : ''}`}>
+          <span
+            className={`chip ${agentTools ? 'is-good' : ''}`}
+            title={
+              agentTools
+                ? `${agentTools} tools available via document.modelContext (${isNativeWebMCP ? 'Native browser WebMCP' : 'WebMCP runtime'})`
+                : 'WebMCP unavailable in this browser environment'
+            }
+          >
             <Bot size={12} />
-            {agentTools ? `${agentTools} agent tools` : 'WebMCP unavailable'}
+            {agentTools
+              ? `${agentTools} agent tools${isNativeWebMCP ? ' (native)' : ''}`
+              : 'WebMCP unavailable'}
           </span>
           <span className={`chip status-${session.status}`}>
             <Radio size={12} />
